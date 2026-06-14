@@ -1,9 +1,4 @@
-// Number of hires required
 const REQUIRED_HIRES = 6;
-
-/* ============================================================
-   JOB DEFINITIONS — WITH BIGGER BUDGETS
-   ============================================================ */
 
 const jobs = [
   {
@@ -22,7 +17,6 @@ const jobs = [
       Stay under budget while hiring ${REQUIRED_HIRES} solid candidates.
     `
   },
-
   {
     id: "elementary-school",
     title: "Elementary School",
@@ -39,7 +33,6 @@ const jobs = [
       Stay under budget while hiring ${REQUIRED_HIRES} solid candidates.
     `
   },
-
   {
     id: "restaurant",
     title: "Restaurant",
@@ -56,7 +49,6 @@ const jobs = [
       may be a poor fit. Stay under budget while hiring ${REQUIRED_HIRES} solid candidates.
     `
   },
-
   {
     id: "hospital",
     title: "Hospital",
@@ -73,7 +65,6 @@ const jobs = [
       Stay under budget while hiring ${REQUIRED_HIRES} solid candidates.
     `
   },
-
   {
     id: "logistics-warehouse",
     title: "Logistics Warehouse",
@@ -91,10 +82,6 @@ const jobs = [
     `
   }
 ];
-
-/* ============================================================
-   DEGREE, SKILL, TRAIT POOLS
-   ============================================================ */
 
 const degreePool = [
   "High School Student",
@@ -137,10 +124,6 @@ const immigrantTraitPool = [
   "adaptable", "team‑player"
 ];
 
-/* ============================================================
-   UNIQUE NAME GENERATOR — NO DUPLICATES EVER
-   ============================================================ */
-
 let uniqueFirstNames = [
   "Maria","Jamal","Luis","Aisha","Chen","Sofia","Ahmed","Emily","Carlos","Hana",
   "Igor","Grace","Nadia","Omar","Lina","Victor","Mei","Ravi","Fatima","Jonas",
@@ -150,31 +133,14 @@ let uniqueFirstNames = [
   "Soren","Amira","Kian","Selena","Dante","Amina","Hiro","Lucia","Mateo","Ivy",
   "Rowan","Elise","Kara","Silas","Reina","Tobias","Ari","Niko","Sage","Kira",
   "Jonah","Ariel","Mira","Zane","Aiden","Nova","Rosa","Elias","Khalid","Tessa",
-  "Harper","Jace","Mariam","Ezra","Skye","Reed","Aiden","Margo","Sana","Dahlia"
+  "Harper","Jace","Mariam","Ezra","Skye","Reed","Margo","Sana","Dahlia","Rayan"
 ];
 
 const backupNames = [...uniqueFirstNames];
 
-function generateName() {
-  if (uniqueFirstNames.length === 0) {
-    uniqueFirstNames = [...backupNames];
-  }
-  const first = uniqueFirstNames.shift();
-  const last = randChoice(["R.","T.","G.","K.","L.","P.","D.","S.","M.","Y.","V.","B.","H.","O.","C.","N.","Z.","Q.","J.","F."]);
-  return `${first} ${last}`;
-}
-
-/* ============================================================
-   GAME STATE
-   ============================================================ */
-
 let currentJob = null;
 let candidates = [];
 let hiredIds = new Set();
-
-/* ============================================================
-   DOM REFERENCES
-   ============================================================ */
 
 const jobTitleEl = document.getElementById("job-title");
 const budgetAmountEl = document.getElementById("budget-amount");
@@ -189,16 +155,17 @@ const totalScoreEl = document.getElementById("total-score");
 const resetBtn = document.getElementById("reset-btn");
 const checkBtn = document.getElementById("check-btn");
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
-
 function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function randChoice(arr) { return arr[randInt(0, arr.length - 1)]; }
 
-/* ============================================================
-   PICK RANDOM JOB
-   ============================================================ */
+function generateName() {
+  if (uniqueFirstNames.length === 0) {
+    uniqueFirstNames = [...backupNames];
+  }
+  const first = uniqueFirstNames.shift();
+  const last = randChoice(["R.","T.","G.","K.","L.","P.","D.","S.","M.","Y.","V.","B.","H.","O.","C.","N.","Z.","Q.","J.","F."]);
+  return `${first} ${last}`;
+}
 
 function pickRandomJob() {
   currentJob = randChoice(jobs);
@@ -209,12 +176,7 @@ function pickRandomJob() {
   jobDescriptionEl.textContent = currentJob.description.trim();
 }
 
-/* ============================================================
-   SALARY LOGIC
-   ============================================================ */
-
 function getBasePay(degree, skills) {
-
   if (degree === "High School Student") return randInt(12, 16);
   if (degree === "High School Graduate") return randInt(14, 20);
   if (degree === "No Degree") return randInt(12, 18);
@@ -242,62 +204,42 @@ function getBasePay(degree, skills) {
 
 function adjustForImmigrant(basePay, immigrant, degree, skills) {
   if (!immigrant) return basePay;
-
   let pay = basePay;
-
   if (["Computer Science", "Engineering", "Medicine"].includes(degree))
     pay -= randInt(4, 10);
-
   if (skills.includes("communication") || skills.includes("customer service"))
     pay -= randInt(2, 5);
-
   pay -= randInt(1, 4);
-
   return Math.max(pay, 12);
 }
 
-/* ============================================================
-   RELEVANCE FILTER — HIDE USELESS CANDIDATES
-   ============================================================ */
-
 function isRelevantForJob(candidate, job) {
-
   if (job.id === "elementary-school") {
     if (["Aerospace Engineering", "Mechanical Engineering", "Computer Science", "Software Engineering", "Data Science"].includes(candidate.degree))
       return false;
   }
-
   if (job.id === "big-tech") {
     if (["Culinary Arts", "Fine Arts", "Music", "History", "Education"].includes(candidate.degree))
       return false;
   }
-
   if (job.id === "restaurant") {
     if (["Aerospace Engineering", "Physics", "Computer Science", "Software Engineering"].includes(candidate.degree))
       return false;
   }
-
   if (job.id === "hospital") {
     if (["Fine Arts", "Music", "Culinary Arts"].includes(candidate.degree))
       return false;
   }
-
   if (job.id === "logistics-warehouse") {
     if (["Music", "Fine Arts", "Psychology"].includes(candidate.degree))
       return false;
   }
-
   return true;
 }
-
-/* ============================================================
-   CANDIDATE GENERATION — GUARANTEED 10–15 QUALIFIED
-   ============================================================ */
 
 function generateCandidates() {
   candidates = [];
   hiredIds = new Set();
-
   let attempts = 0;
 
   while (candidates.length < 60 && attempts < 300) {
@@ -334,7 +276,6 @@ function generateCandidates() {
 
     const basePay = getBasePay(degree, skills);
     const pay = adjustForImmigrant(basePay, immigrant, degree, skills);
-
     const trait = immigrant ? randChoice(immigrantTraitPool) : randChoice(traitPool);
 
     const candidate = {
@@ -353,10 +294,6 @@ function generateCandidates() {
     }
   }
 }
-
-/* ============================================================
-   RENDERING
-   ============================================================ */
 
 function renderCandidates() {
   candidateListEl.innerHTML = "";
@@ -409,10 +346,6 @@ function createCandidateCard(candidate, inHired) {
   return card;
 }
 
-/* ============================================================
-   DRAG & DROP
-   ============================================================ */
-
 candidateListEl.addEventListener("dragover", (e) => e.preventDefault());
 candidateListEl.addEventListener("drop", (e) => {
   const id = e.dataTransfer.getData("text/plain");
@@ -432,10 +365,6 @@ hiredDropzoneEl.addEventListener("drop", (e) => {
   renderHired();
   updateScores();
 });
-
-/* ============================================================
-   SCORING
-   ============================================================ */
 
 function computeFitScoreForCandidate(candidate) {
   let score = 0;
@@ -474,4 +403,42 @@ function updateScores() {
 
   fitScoreEl.textContent = fitScore;
 
-  let budgetScore = remainingBudget > 0
+  let budgetScore;
+  if (remainingBudget >= 0) {
+    budgetScore = Math.round((remainingBudget / currentJob.budget) * 100);
+  } else {
+    budgetScore = Math.round((remainingBudget / currentJob.budget) * 50);
+  }
+
+  totalScoreEl.textContent = fitScore + budgetScore;
+}
+
+resetBtn.addEventListener("click", startGame);
+
+checkBtn.addEventListener("click", () => {
+  const hired = candidates.filter(c => hiredIds.has(c.id));
+  const remaining = budgetRemainingEl.textContent;
+  const fit = fitScoreEl.textContent;
+  const total = totalScoreEl.textContent;
+
+  let msg = `You hired ${hired.length} candidates.\nRemaining budget: ${remaining}.\nFit score: ${fit}.\nTotal score: ${total}.`;
+
+  if (hired.length < REQUIRED_HIRES)
+    msg += `\n\nYou hired fewer than ${REQUIRED_HIRES}.`;
+  else if (hired.length > REQUIRED_HIRES)
+    msg += `\n\nYou hired more than ${REQUIRED_HIRES}.`;
+  else
+    msg += `\n\nNice! You hired exactly ${REQUIRED_HIRES}.`;
+
+  alert(msg);
+});
+
+function startGame() {
+  pickRandomJob();
+  generateCandidates();
+  renderCandidates();
+  renderHired();
+  updateScores();
+}
+
+startGame();
