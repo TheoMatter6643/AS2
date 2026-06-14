@@ -1,12 +1,12 @@
 // CONFIG
 const REQUIRED_HIRES = 6;
 
-// JOB DEFINITIONS
+// JOB DEFINITIONS (budgets lowered)
 const jobs = [
   {
     id: "big-tech",
     title: "Big Tech Company",
-    budget: 150,
+    budget: 90,
     preferredDegrees: ["Computer Science", "Software Engineering", "Data Science", "Information Technology"],
     neutralDegrees: ["Mathematics", "Business Administration", "Physics"],
     badDegrees: ["Music", "Fine Arts", "Culinary Arts", "History", "Education"],
@@ -22,7 +22,7 @@ const jobs = [
   {
     id: "elementary-school",
     title: "Elementary School",
-    budget: 120,
+    budget: 80,
     preferredDegrees: ["Education", "Psychology", "English", "History"],
     neutralDegrees: ["Music", "Fine Arts", "Mathematics"],
     badDegrees: ["Aerospace Engineering", "Mechanical Engineering", "Computer Science"],
@@ -38,7 +38,7 @@ const jobs = [
   {
     id: "restaurant",
     title: "Restaurant",
-    budget: 100,
+    budget: 70,
     preferredDegrees: ["Culinary Arts", "Hospitality", "Business Administration"],
     neutralDegrees: ["Music", "Fine Arts", "Education"],
     badDegrees: ["Aerospace Engineering", "Data Science", "Physics"],
@@ -54,7 +54,7 @@ const jobs = [
   {
     id: "hospital",
     title: "Hospital",
-    budget: 160,
+    budget: 95,
     preferredDegrees: ["Nursing", "Biology", "Medicine", "Psychology"],
     neutralDegrees: ["Business Administration", "Mathematics"],
     badDegrees: ["Music", "Fine Arts", "Culinary Arts"],
@@ -70,7 +70,7 @@ const jobs = [
   {
     id: "logistics-warehouse",
     title: "Logistics Warehouse",
-    budget: 110,
+    budget: 75,
     preferredDegrees: ["Logistics", "Business Administration", "Mechanical Engineering"],
     neutralDegrees: ["Mathematics", "Physics"],
     badDegrees: ["Music", "Fine Arts", "Culinary Arts"],
@@ -185,6 +185,7 @@ function generateCandidates(count = 24) {
 
   for (let i = 0; i < count; i++) {
     const degree = randChoice(degreePool);
+
     const skills = [];
     const numSkills = randInt(2, 4);
     for (let j = 0; j < numSkills; j++) {
@@ -194,7 +195,13 @@ function generateCandidates(count = 24) {
 
     const immigrant = Math.random() < 0.5;
     const reliability = randInt(3, 10);
-    const pay = randInt(15, 40);
+
+    // Immigrants get paid less
+    let basePay = randInt(15, 40);
+    if (immigrant) basePay -= randInt(3, 8);
+    if (basePay < 12) basePay = 12;
+    const pay = basePay;
+
     const trait = randChoice(traitPool);
 
     candidates.push({
@@ -242,16 +249,13 @@ function createCandidateCard(candidate, inHired) {
   card.draggable = !inHired;
   card.dataset.id = candidate.id;
 
-  const degreeLabel = `(${candidate.degree})`;
-  const immigrantLabel = candidate.immigrant ? "Immigrant" : null;
-
   card.innerHTML = `
     <div class="candidate-header">
       <span>${candidate.name}</span>
       <span class="candidate-pay">$${candidate.pay}/hr</span>
     </div>
     <div class="candidate-meta">
-      Degree: ${degreeLabel} • Reliability: ${candidate.reliability}/10 • Trait: ${candidate.trait}
+      Degree: (${candidate.degree}) • Reliability: ${candidate.reliability}/10 • Trait: ${candidate.trait}
     </div>
     <div class="candidate-tags">
       <span class="tag degree">${candidate.degree}</span>
@@ -331,7 +335,7 @@ function computeFitScoreForCandidate(candidate) {
     score += 1;
   }
 
-  // Over/under qualification (rough heuristic)
+  // Over/under qualification (funny mismatches)
   if (candidate.degree === "Aerospace Engineering" && currentJob.id === "restaurant") {
     score -= 3;
   }
@@ -343,31 +347,27 @@ function computeFitScoreForCandidate(candidate) {
 }
 
 function updateScores() {
-  // Budget
   const hired = candidates.filter(c => hiredIds.has(c.id));
   const totalPay = hired.reduce((sum, c) => sum + c.pay, 0);
   const remainingBudget = currentJob.budget - totalPay;
   budgetRemainingEl.textContent = `$${remainingBudget}/hr`;
 
-  // Fit score
   let fitScore = 0;
   hired.forEach(c => {
     fitScore += computeFitScoreForCandidate(c);
   });
 
-  // Penalty if wrong number of hires
   if (hired.length !== REQUIRED_HIRES) {
     fitScore -= Math.abs(hired.length - REQUIRED_HIRES) * 5;
   }
 
   fitScoreEl.textContent = fitScore;
 
-  // Budget score (only positive if under budget)
   let budgetScore = 0;
   if (remainingBudget > 0) {
     budgetScore = Math.round((remainingBudget / currentJob.budget) * 100);
   } else {
-    budgetScore = Math.round((remainingBudget / currentJob.budget) * 50); // penalty if over
+    budgetScore = Math.round((remainingBudget / currentJob.budget) * 50);
   }
 
   const totalScore = fitScore + budgetScore;
