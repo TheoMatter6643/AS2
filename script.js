@@ -4,7 +4,7 @@ const jobs = [
   {
     id: "restaurant",
     title: "Restaurant",
-    budget: 140,
+    budget: 90,
     preferredDegrees: ["Culinary Arts", "Hospitality", "Business Administration"],
     neutralDegrees: ["Music", "Fine Arts", "Education", "High School Graduate", "No Degree"],
     badDegrees: ["Aerospace Engineering", "Data Science", "Physics"],
