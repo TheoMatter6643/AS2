@@ -352,7 +352,8 @@ function startGame(){
     return;
   }
 
-  companyName = prompt("Enter your company name for this round:") || "Your Company";
+ const typeName = currentJob.title;  
+companyName = prompt(`What is your ${typeName}'s name?`) || "Your Company";
 
   alert(`Round ${currentRound+1}: ${roundOrder[currentRound].replace("-", " ")}`);
 
