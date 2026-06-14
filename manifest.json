@@ -1,0 +1,9 @@
+{
+  "name": "Workforce Architect",
+  "short_name": "Workforce",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff7e6",
+  "theme_color": "#e07a2f",
+  "icons": []
+}
