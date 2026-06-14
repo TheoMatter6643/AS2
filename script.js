@@ -151,7 +151,7 @@ function getBasePay(degree, skills) {
     return randInt(28, 55);
   if (["Education", "History", "English"].includes(degree))
     return randInt(20, 35);
-  if (skills.includes("warehouse") || skills.includes("forklift") || degree === "Logistics"))
+  if (skills.includes("warehouse") || skills.includes("forklift") || degree === "Logistics")
     return randInt(18, 30);
   if (degree === "Culinary Arts" || skills.includes("cooking"))
     return randInt(14, 22);
