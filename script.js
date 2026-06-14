@@ -1,14 +1,14 @@
 // Number of hires required
 const REQUIRED_HIRES = 6;
 
-// Job definitions
+// Job definitions (with bigger budgets)
 const jobs = [
   {
     id: "big-tech",
     title: "Big Tech Company",
-    budget: 90,
+    budget: 150,
     preferredDegrees: ["Computer Science", "Software Engineering", "Data Science", "Information Technology"],
-    neutralDegrees: ["Mathematics", "Business Administration", "Physics"],
+    neutralDegrees: ["Mathematics", "Business Administration", "Physics", "High School Graduate"],
     badDegrees: ["Music", "Fine Arts", "Culinary Arts", "History", "Education"],
     requiredSkills: ["coding", "data", "debugging", "IT support"],
     immigrantBonus: true,
@@ -22,10 +22,10 @@ const jobs = [
   {
     id: "elementary-school",
     title: "Elementary School",
-    budget: 80,
+    budget: 100,
     preferredDegrees: ["Education", "Psychology", "English", "History"],
-    neutralDegrees: ["Music", "Fine Arts", "Mathematics"],
-    badDegrees: ["Aerospace Engineering", "Mechanical Engineering", "Computer Science"],
+    neutralDegrees: ["Music", "Fine Arts", "Mathematics", "High School Graduate"],
+    badDegrees: ["Aerospace Engineering", "Mechanical Engineering", "Computer Science", "Software Engineering"],
     requiredSkills: ["teaching", "childcare", "communication", "writing"],
     immigrantBonus: true,
     description: `
@@ -38,9 +38,9 @@ const jobs = [
   {
     id: "restaurant",
     title: "Restaurant",
-    budget: 70,
+    budget: 80,
     preferredDegrees: ["Culinary Arts", "Hospitality", "Business Administration"],
-    neutralDegrees: ["Music", "Fine Arts", "Education"],
+    neutralDegrees: ["Music", "Fine Arts", "Education", "High School Graduate", "No Degree"],
     badDegrees: ["Aerospace Engineering", "Data Science", "Physics"],
     requiredSkills: ["cooking", "customer service", "cashier", "host", "logistics"],
     immigrantBonus: true,
@@ -54,9 +54,9 @@ const jobs = [
   {
     id: "hospital",
     title: "Hospital",
-    budget: 95,
+    budget: 160,
     preferredDegrees: ["Nursing", "Biology", "Medicine", "Psychology"],
-    neutralDegrees: ["Business Administration", "Mathematics"],
+    neutralDegrees: ["Business Administration", "Mathematics", "High School Graduate"],
     badDegrees: ["Music", "Fine Arts", "Culinary Arts"],
     requiredSkills: ["caregiving", "analysis", "communication", "logistics"],
     immigrantBonus: true,
@@ -70,10 +70,10 @@ const jobs = [
   {
     id: "logistics-warehouse",
     title: "Logistics Warehouse",
-    budget: 75,
+    budget: 90,
     preferredDegrees: ["Logistics", "Business Administration", "Mechanical Engineering"],
-    neutralDegrees: ["Mathematics", "Physics"],
-    badDegrees: ["Music", "Fine Arts", "Culinary Arts"],
+    neutralDegrees: ["Mathematics", "Physics", "High School Graduate", "No Degree"],
+    badDegrees: ["Music", "Fine Arts", "Culinary Arts", "Psychology"],
     requiredSkills: ["logistics", "warehouse", "forklift", "driver"],
     immigrantBonus: true,
     description: `
@@ -87,10 +87,27 @@ const jobs = [
 
 // Degree, skill, and trait pools
 const degreePool = [
-  "Computer Science", "Software Engineering", "Data Science", "Information Technology",
-  "Mathematics", "Business Administration", "Physics", "Music", "Fine Arts",
-  "Culinary Arts", "History", "Education", "Psychology", "Nursing", "Biology",
-  "Mechanical Engineering", "Aerospace Engineering", "Logistics"
+  "High School Student",
+  "High School Graduate",
+  "No Degree",
+  "Computer Science",
+  "Software Engineering",
+  "Data Science",
+  "Information Technology",
+  "Mathematics",
+  "Business Administration",
+  "Physics",
+  "Music",
+  "Fine Arts",
+  "Culinary Arts",
+  "History",
+  "Education",
+  "Psychology",
+  "Nursing",
+  "Biology",
+  "Mechanical Engineering",
+  "Aerospace Engineering",
+  "Logistics"
 ];
 
 const skillPool = [
@@ -145,18 +162,36 @@ function pickRandomJob() {
 
 // Base salary by degree/skills
 function getBasePay(degree, skills) {
+
+  // No degree / high school
+  if (degree === "High School Student") return randInt(12, 16);
+  if (degree === "High School Graduate") return randInt(14, 20);
+  if (degree === "No Degree") return randInt(12, 18);
+
+  // Tech
   if (["Computer Science", "Software Engineering", "Data Science", "Information Technology"].includes(degree))
     return randInt(35, 60);
+
+  // Healthcare
   if (["Nursing", "Biology", "Psychology", "Medicine"].includes(degree))
     return randInt(28, 55);
+
+  // Education
   if (["Education", "History", "English"].includes(degree))
     return randInt(20, 35);
+
+  // Logistics
   if (skills.includes("warehouse") || skills.includes("forklift") || degree === "Logistics")
     return randInt(18, 30);
+
+  // Culinary
   if (degree === "Culinary Arts" || skills.includes("cooking"))
     return randInt(14, 22);
+
+  // Arts
   if (["Music", "Fine Arts"].includes(degree))
     return randInt(15, 25);
+
   return randInt(18, 30);
 }
 
@@ -174,25 +209,71 @@ function adjustForImmigrant(basePay, immigrant, degree, skills) {
   return Math.max(pay, 12);
 }
 
-// Generate candidates
-function generateCandidates(count = 24) {
+// Relevance filter: hide totally useless candidates for a given job
+function isRelevantForJob(candidate, job) {
+
+  // Education job
+  if (job.id === "elementary-school") {
+    if (["Aerospace Engineering", "Mechanical Engineering", "Computer Science", "Software Engineering", "Data Science"].includes(candidate.degree))
+      return false;
+  }
+
+  // Tech job
+  if (job.id === "big-tech") {
+    if (["Culinary Arts", "Fine Arts", "Music", "History", "Education"].includes(candidate.degree))
+      return false;
+  }
+
+  // Restaurant job
+  if (job.id === "restaurant") {
+    if (["Aerospace Engineering", "Physics", "Computer Science", "Software Engineering"].includes(candidate.degree))
+      return false;
+  }
+
+  // Hospital job
+  if (job.id === "hospital") {
+    if (["Fine Arts", "Music", "Culinary Arts"].includes(candidate.degree))
+      return false;
+  }
+
+  // Logistics job
+  if (job.id === "logistics-warehouse") {
+    if (["Music", "Fine Arts", "Psychology"].includes(candidate.degree))
+      return false;
+  }
+
+  return true;
+}
+
+// Generate candidates (lots, then filter)
+function generateCandidates() {
   candidates = [];
   hiredIds = new Set();
 
-  for (let i = 0; i < count; i++) {
+  let attempts = 0;
+
+  while (candidates.length < 40 && attempts < 200) {
+    attempts++;
+
     const immigrant = Math.random() < 0.45;
 
-    // Immigrant degree bias
     const immigrantDegreePool = [
-      "Computer Science", "Software Engineering", "Data Science",
-      "Information Technology", "Mechanical Engineering",
-      "Aerospace Engineering", "Biology", "Nursing",
-      "Logistics", "Culinary Arts", "Business Administration"
+      "High School Graduate",
+      "No Degree",
+      "Computer Science",
+      "Software Engineering",
+      "Data Science",
+      "Information Technology",
+      "Mechanical Engineering",
+      "Biology",
+      "Nursing",
+      "Logistics",
+      "Culinary Arts",
+      "Business Administration"
     ];
 
     const degree = immigrant ? randChoice(immigrantDegreePool) : randChoice(degreePool);
 
-    // Skills
     const skills = [];
     const numSkills = randInt(2, 4);
     for (let j = 0; j < numSkills; j++) {
@@ -200,27 +281,28 @@ function generateCandidates(count = 24) {
       if (!skills.includes(skill)) skills.push(skill);
     }
 
-    // Reliability
     let reliability = randInt(3, 10);
     if (immigrant) reliability = Math.min(reliability + 1, 10);
 
-    // Salary
     const basePay = getBasePay(degree, skills);
     const pay = adjustForImmigrant(basePay, immigrant, degree, skills);
 
-    // Traits
     const trait = immigrant ? randChoice(immigrantTraitPool) : randChoice(traitPool);
 
-    candidates.push({
-      id: `c${i + 1}`,
-      name: generateName(i),
+    const candidate = {
+      id: `c${attempts}`,
+      name: generateName(),
       degree,
       skills,
       immigrant,
       reliability,
       pay,
       trait
-    });
+    };
+
+    if (isRelevantForJob(candidate, currentJob)) {
+      candidates.push(candidate);
+    }
   }
 }
 
@@ -377,7 +459,7 @@ checkBtn.addEventListener("click", () => {
 // Start game
 function startGame() {
   pickRandomJob();
-  generateCandidates(24);
+  generateCandidates();
   renderCandidates();
   renderHired();
   updateScores();
