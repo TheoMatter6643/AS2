@@ -1,9 +1,7 @@
-
 const TOTAL_BUDGET = 120;
 let budgetRemaining = TOTAL_BUDGET;
 
 const placements = {}; // slot → workerId
-
 
 const workers = [
   {
@@ -128,12 +126,10 @@ const workers = [
   }
 ];
 
-
 const workerListEl = document.getElementById("worker-list");
 const budgetRemainingEl = document.getElementById("budget-remaining");
 const totalScoreEl = document.getElementById("total-score");
 const budgetStatusEl = document.getElementById("budget-status");
-
 
 function createWorkerCard(worker) {
   const card = document.createElement("div");
@@ -179,7 +175,6 @@ function renderWorkers() {
   });
 }
 
-
 const slots = document.querySelectorAll(".slot");
 
 slots.forEach(slot => {
@@ -218,10 +213,100 @@ function updateSlots() {
   renderWorkers();
 }
 
-
 function updateBudget() {
   const used = Object.values(placements)
     .map(id => workers.find(w => w.id === id))
     .reduce((sum, w) => sum + (w ? w.pay : 0), 0);
 
-  budget
+  budgetRemaining = TOTAL_BUDGET - used;
+  budgetRemainingEl.textContent = `$${budgetRemaining}/hr`;
+
+  if (budgetRemaining < 0) {
+    budgetStatusEl.textContent = "Over Budget";
+    budgetStatusEl.className = "highlight-budget-bad";
+  } else {
+    budgetStatusEl.textContent = "OK";
+    budgetStatusEl.className = "highlight-budget-ok";
+  }
+}
+
+function scoreWorkerForBoard(worker, board) {
+  let score = 0;
+
+  score += Math.round(worker.reliability / 2);
+
+  if (board === "blue") {
+    if (worker.skills.includes("construction") || worker.skills.includes("warehouse") || worker.skills.includes("driver")) {
+      score += 2;
+    }
+    if (worker.immigrant) score += 1;
+  }
+
+  if (board === "white") {
+    if (worker.education === "college") score += 2;
+    if (worker.reliability >= 8) score += 1;
+  }
+
+  if (board === "service") {
+    if (worker.skills.includes("bilingual") || worker.skills.includes("host") || worker.skills.includes("cashier") || worker.skills.includes("barista")) {
+      score += 2;
+    }
+    if (worker.education === "hs" || worker.education === "nohs") score += 1;
+    if (worker.immigrant) score += 1;
+  }
+
+  if (board === "unemployed") {
+    if (worker.reliability <= 7) score += 1;
+    if (worker.preference !== board) score += 1;
+    if (worker.immigrant) score += 1;
+  }
+
+  return score;
+}
+
+function updateScores() {
+  const boards = ["blue", "white", "service", "unemployed"];
+  let total = 0;
+
+  boards.forEach(board => {
+    const boardSlots = Object.keys(placements).filter(slotId => slotId.startsWith(board));
+    let boardScore = 0;
+
+    boardSlots.forEach(slotId => {
+      const workerId = placements[slotId];
+      const worker = workers.find(w => w.id === workerId);
+      if (worker) boardScore += scoreWorkerForBoard(worker, board);
+    });
+
+    document.querySelector(`[data-score="${board}"]`).textContent = boardScore;
+    total += boardScore;
+  });
+
+  totalScoreEl.textContent = total;
+}
+
+document.getElementById("reset-btn").addEventListener("click", () => {
+  Object.keys(placements).forEach(k => delete placements[k]);
+  updateSlots();
+  updateBudget();
+  updateScores();
+});
+
+document.getElementById("check-btn").addEventListener("click", () => {
+  const filledSlots = Object.keys(placements).length;
+
+  let message = `You placed ${filledSlots} workers.\nTotal score: ${totalScoreEl.textContent}.\nBudget remaining: $${budgetRemaining}/hr.`;
+
+  if (budgetRemaining < 0) {
+    message += "\n\nYou are over budget!";
+  } else if (filledSlots < 12) {
+    message += "\n\nYou still have empty slots.";
+  } else {
+    message += "\n\nNice! You built a full workforce.";
+  }
+
+  alert(message);
+});
+
+updateBudget();
+updateScores();
