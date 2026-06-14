@@ -24,29 +24,32 @@
   </header>
 
   <main>
-    <!-- Job Description -->
-    <section class="job-panel">
-      <h2>Job Description</h2>
-      <div id="job-description"></div>
-    </section>
 
-    <!-- Candidate Pool + Hired -->
-    <section class="game-panel">
-      <div class="candidate-section">
-        <h2>Candidate Pool</h2>
-        <p class="hint">Drag candidates into the "Hired" area. Choose exactly the required number and stay under budget.</p>
-        <div class="candidate-list" id="candidate-list"></div>
-      </div>
+  <!-- JOB DESCRIPTION FIRST -->
+  <section class="job-panel">
+    <h2>Job Description</h2>
+    <div id="job-description"></div>
+  </section>
 
-      <div class="hired-section">
-        <h2>Your Hires</h2>
-        <p class="hint">Drop candidates here. You must hire exactly <span id="hire-count-inline">0</span>.</p>
-        <div class="hired-dropzone" id="hired-dropzone">
-          <!-- Hired candidates appear here -->
-        </div>
-      </div>
-    </section>
-  </main>
+  <!-- TWO-COLUMN PANEL -->
+  <section class="game-panel">
+
+    <div class="candidate-section">
+      <h2>Candidate Pool</h2>
+      <p class="hint">Drag candidates into the hired area. Choose exactly <span id="hire-count-inline">0</span>.</p>
+      <div class="candidate-list" id="candidate-list"></div>
+    </div>
+
+    <div class="hired-section">
+      <h2>Your Hires</h2>
+      <p class="hint">Drop hired candidates here.</p>
+      <div class="hired-dropzone empty" id="hired-dropzone"></div>
+    </div>
+
+  </section>
+
+</main>
+
 
   <footer>
     <div class="summary">
