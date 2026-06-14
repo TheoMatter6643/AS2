@@ -1,7 +1,7 @@
-// CONFIG
+// Number of hires required
 const REQUIRED_HIRES = 6;
 
-// JOB DEFINITIONS (budgets lowered)
+// Job definitions
 const jobs = [
   {
     id: "big-tech",
@@ -85,68 +85,37 @@ const jobs = [
   }
 ];
 
-// DEGREE + SKILL POOLS
+// Degree, skill, and trait pools
 const degreePool = [
-  "Computer Science",
-  "Software Engineering",
-  "Data Science",
-  "Information Technology",
-  "Mathematics",
-  "Business Administration",
-  "Physics",
-  "Music",
-  "Fine Arts",
-  "Culinary Arts",
-  "History",
-  "Education",
-  "Psychology",
-  "Nursing",
-  "Biology",
-  "Mechanical Engineering",
-  "Aerospace Engineering",
-  "Logistics"
+  "Computer Science", "Software Engineering", "Data Science", "Information Technology",
+  "Mathematics", "Business Administration", "Physics", "Music", "Fine Arts",
+  "Culinary Arts", "History", "Education", "Psychology", "Nursing", "Biology",
+  "Mechanical Engineering", "Aerospace Engineering", "Logistics"
 ];
 
 const skillPool = [
-  "coding",
-  "data",
-  "debugging",
-  "IT support",
-  "teaching",
-  "childcare",
-  "communication",
-  "writing",
-  "cooking",
-  "customer service",
-  "cashier",
-  "host",
-  "logistics",
-  "warehouse",
-  "forklift",
-  "driver",
-  "analysis",
-  "caregiving",
-  "marketing",
-  "social media"
+  "coding", "data", "debugging", "IT support", "teaching", "childcare",
+  "communication", "writing", "cooking", "customer service", "cashier",
+  "host", "logistics", "warehouse", "forklift", "driver", "analysis",
+  "caregiving", "marketing", "social media"
 ];
 
 const traitPool = [
-  "reliable",
-  "creative",
-  "slow learner",
-  "bilingual",
-  "perfectionist",
-  "disorganized",
-  "team‑player",
-  "independent"
+  "reliable", "creative", "slow learner", "bilingual", "perfectionist",
+  "disorganized", "team‑player", "independent"
 ];
 
-// STATE
+const immigrantTraitPool = [
+  "bilingual", "high stamina", "precision worker", "fast learner",
+  "adaptable", "team‑player"
+];
+
+// Game state
 let currentJob = null;
 let candidates = [];
 let hiredIds = new Set();
 
-// DOM
+// DOM references
 const jobTitleEl = document.getElementById("job-title");
 const budgetAmountEl = document.getElementById("budget-amount");
 const hireCountEl = document.getElementById("hire-count");
@@ -160,16 +129,11 @@ const totalScoreEl = document.getElementById("total-score");
 const resetBtn = document.getElementById("reset-btn");
 const checkBtn = document.getElementById("check-btn");
 
-// UTIL
-function randInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+// Helpers
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randChoice(arr) { return arr[randInt(0, arr.length - 1)]; }
 
-function randChoice(arr) {
-  return arr[randInt(0, arr.length - 1)];
-}
-
-// JOB + CANDIDATE GENERATION
+// Pick a random job
 function pickRandomJob() {
   currentJob = randChoice(jobs);
   jobTitleEl.textContent = currentJob.title;
@@ -179,13 +143,56 @@ function pickRandomJob() {
   jobDescriptionEl.textContent = currentJob.description.trim();
 }
 
+// Base salary by degree/skills
+function getBasePay(degree, skills) {
+  if (["Computer Science", "Software Engineering", "Data Science", "Information Technology"].includes(degree))
+    return randInt(35, 60);
+  if (["Nursing", "Biology", "Psychology", "Medicine"].includes(degree))
+    return randInt(28, 55);
+  if (["Education", "History", "English"].includes(degree))
+    return randInt(20, 35);
+  if (skills.includes("warehouse") || skills.includes("forklift") || degree === "Logistics"))
+    return randInt(18, 30);
+  if (degree === "Culinary Arts" || skills.includes("cooking"))
+    return randInt(14, 22);
+  if (["Music", "Fine Arts"].includes(degree))
+    return randInt(15, 25);
+  return randInt(18, 30);
+}
+
+// Immigrant salary adjustments
+function adjustForImmigrant(basePay, immigrant, degree, skills) {
+  if (!immigrant) return basePay;
+
+  let pay = basePay;
+  if (["Computer Science", "Engineering", "Medicine"].includes(degree))
+    pay -= randInt(4, 10);
+  if (skills.includes("communication") || skills.includes("customer service"))
+    pay -= randInt(2, 5);
+  pay -= randInt(1, 4);
+
+  return Math.max(pay, 12);
+}
+
+// Generate candidates
 function generateCandidates(count = 24) {
   candidates = [];
   hiredIds = new Set();
 
   for (let i = 0; i < count; i++) {
-    const degree = randChoice(degreePool);
+    const immigrant = Math.random() < 0.45;
 
+    // Immigrant degree bias
+    const immigrantDegreePool = [
+      "Computer Science", "Software Engineering", "Data Science",
+      "Information Technology", "Mechanical Engineering",
+      "Aerospace Engineering", "Biology", "Nursing",
+      "Logistics", "Culinary Arts", "Business Administration"
+    ];
+
+    const degree = immigrant ? randChoice(immigrantDegreePool) : randChoice(degreePool);
+
+    // Skills
     const skills = [];
     const numSkills = randInt(2, 4);
     for (let j = 0; j < numSkills; j++) {
@@ -193,16 +200,16 @@ function generateCandidates(count = 24) {
       if (!skills.includes(skill)) skills.push(skill);
     }
 
-    const immigrant = Math.random() < 0.5;
-    const reliability = randInt(3, 10);
+    // Reliability
+    let reliability = randInt(3, 10);
+    if (immigrant) reliability = Math.min(reliability + 1, 10);
 
-    // Immigrants get paid less
-    let basePay = randInt(15, 40);
-    if (immigrant) basePay -= randInt(3, 8);
-    if (basePay < 12) basePay = 12;
-    const pay = basePay;
+    // Salary
+    const basePay = getBasePay(degree, skills);
+    const pay = adjustForImmigrant(basePay, immigrant, degree, skills);
 
-    const trait = randChoice(traitPool);
+    // Traits
+    const trait = immigrant ? randChoice(immigrantTraitPool) : randChoice(traitPool);
 
     candidates.push({
       id: `c${i + 1}`,
@@ -217,13 +224,14 @@ function generateCandidates(count = 24) {
   }
 }
 
-function generateName(index) {
-  const firstNames = ["Maria", "Jamal", "Luis", "Aisha", "Chen", "Sofia", "Ahmed", "Emily", "Carlos", "Hana", "Igor", "Grace", "Nadia", "Omar", "Lina", "Victor", "Mei", "Ravi", "Fatima", "Jonas"];
-  const lastNames = ["R.", "T.", "G.", "K.", "L.", "P.", "D.", "S.", "M.", "Y.", "V.", "B.", "H.", "O.", "C.", "N.", "Z.", "Q.", "J.", "F."];
-  return `${randChoice(firstNames)} ${randChoice(lastNames)}`;
+// Random name generator
+function generateName() {
+  const first = ["Maria", "Jamal", "Luis", "Aisha", "Chen", "Sofia", "Ahmed", "Emily", "Carlos", "Hana", "Igor", "Grace", "Nadia", "Omar", "Lina", "Victor", "Mei", "Ravi", "Fatima", "Jonas"];
+  const last = ["R.", "T.", "G.", "K.", "L.", "P.", "D.", "S.", "M.", "Y.", "V.", "B.", "H.", "O.", "C.", "N.", "Z.", "Q.", "J.", "F."];
+  return `${randChoice(first)} ${randChoice(last)}`;
 }
 
-// RENDER
+// Render candidate pool
 function renderCandidates() {
   candidateListEl.innerHTML = "";
   candidates.forEach(c => {
@@ -233,6 +241,7 @@ function renderCandidates() {
   });
 }
 
+// Render hired list
 function renderHired() {
   hiredDropzoneEl.innerHTML = "";
   hiredDropzoneEl.classList.toggle("empty", hiredIds.size === 0);
@@ -243,6 +252,7 @@ function renderHired() {
   });
 }
 
+// Create candidate card
 function createCandidateCard(candidate, inHired) {
   const card = document.createElement("div");
   card.className = "candidate-card";
@@ -269,18 +279,15 @@ function createCandidateCard(candidate, inHired) {
       card.classList.add("dragging");
       e.dataTransfer.setData("text/plain", candidate.id);
     });
-    card.addEventListener("dragend", () => {
-      card.classList.remove("dragging");
-    });
+    card.addEventListener("dragend", () => card.classList.remove("dragging"));
   }
 
   return card;
 }
 
-// DRAG & DROP
+// Drag back to candidate pool
 candidateListEl.addEventListener("dragover", (e) => e.preventDefault());
 candidateListEl.addEventListener("drop", (e) => {
-  e.preventDefault();
   const id = e.dataTransfer.getData("text/plain");
   if (!id) return;
   hiredIds.delete(id);
@@ -289,9 +296,9 @@ candidateListEl.addEventListener("drop", (e) => {
   updateScores();
 });
 
+// Drag into hired zone
 hiredDropzoneEl.addEventListener("dragover", (e) => e.preventDefault());
 hiredDropzoneEl.addEventListener("drop", (e) => {
-  e.preventDefault();
   const id = e.dataTransfer.getData("text/plain");
   if (!id) return;
   hiredIds.add(id);
@@ -300,105 +307,74 @@ hiredDropzoneEl.addEventListener("drop", (e) => {
   updateScores();
 });
 
-// SCORING
+// Fit scoring
 function computeFitScoreForCandidate(candidate) {
   let score = 0;
 
-  // Degree fit
-  if (currentJob.preferredDegrees.includes(candidate.degree)) {
-    score += 3;
-  } else if (currentJob.neutralDegrees.includes(candidate.degree)) {
-    score += 1;
-  } else if (currentJob.badDegrees.includes(candidate.degree)) {
-    score -= 3;
-  }
+  if (currentJob.preferredDegrees.includes(candidate.degree)) score += 3;
+  else if (currentJob.neutralDegrees.includes(candidate.degree)) score += 1;
+  else if (currentJob.badDegrees.includes(candidate.degree)) score -= 3;
 
-  // Skills fit
   const skillMatches = candidate.skills.filter(s => currentJob.requiredSkills.includes(s)).length;
-  if (skillMatches >= 2) {
-    score += 3;
-  } else if (skillMatches === 1) {
-    score += 1;
-  } else {
-    score -= 2;
-  }
+  if (skillMatches >= 2) score += 3;
+  else if (skillMatches === 1) score += 1;
+  else score -= 2;
 
-  // Reliability
-  if (candidate.reliability >= 8) {
-    score += 2;
-  } else if (candidate.reliability <= 5) {
-    score -= 2;
-  }
+  if (candidate.reliability >= 8) score += 2;
+  else if (candidate.reliability <= 5) score -= 2;
 
-  // Immigrant bonus
-  if (currentJob.immigrantBonus && candidate.immigrant) {
-    score += 1;
-  }
+  if (currentJob.immigrantBonus && candidate.immigrant) score += 1;
 
-  // Over/under qualification (funny mismatches)
-  if (candidate.degree === "Aerospace Engineering" && currentJob.id === "restaurant") {
-    score -= 3;
-  }
-  if (candidate.degree === "Culinary Arts" && currentJob.id === "big-tech") {
-    score -= 3;
-  }
+  if (candidate.degree === "Aerospace Engineering" && currentJob.id === "restaurant") score -= 3;
+  if (candidate.degree === "Culinary Arts" && currentJob.id === "big-tech") score -= 3;
 
   return score;
 }
 
+// Update scores
 function updateScores() {
   const hired = candidates.filter(c => hiredIds.has(c.id));
   const totalPay = hired.reduce((sum, c) => sum + c.pay, 0);
   const remainingBudget = currentJob.budget - totalPay;
+
   budgetRemainingEl.textContent = `$${remainingBudget}/hr`;
 
-  let fitScore = 0;
-  hired.forEach(c => {
-    fitScore += computeFitScoreForCandidate(c);
-  });
+  let fitScore = hired.reduce((sum, c) => sum + computeFitScoreForCandidate(c), 0);
 
-  if (hired.length !== REQUIRED_HIRES) {
+  if (hired.length !== REQUIRED_HIRES)
     fitScore -= Math.abs(hired.length - REQUIRED_HIRES) * 5;
-  }
 
   fitScoreEl.textContent = fitScore;
 
-  let budgetScore = 0;
-  if (remainingBudget > 0) {
-    budgetScore = Math.round((remainingBudget / currentJob.budget) * 100);
-  } else {
-    budgetScore = Math.round((remainingBudget / currentJob.budget) * 50);
-  }
+  let budgetScore = remainingBudget > 0
+    ? Math.round((remainingBudget / currentJob.budget) * 100)
+    : Math.round((remainingBudget / currentJob.budget) * 50);
 
-  const totalScore = fitScore + budgetScore;
-  totalScoreEl.textContent = totalScore;
+  totalScoreEl.textContent = fitScore + budgetScore;
 }
 
-// BUTTONS
-resetBtn.addEventListener("click", () => {
-  startGame();
-});
+// Buttons
+resetBtn.addEventListener("click", startGame);
 
 checkBtn.addEventListener("click", () => {
   const hired = candidates.filter(c => hiredIds.has(c.id));
-  const remainingBudgetText = budgetRemainingEl.textContent;
-  const fit = parseInt(fitScoreEl.textContent, 10);
-  const total = parseInt(totalScoreEl.textContent, 10);
+  const remaining = budgetRemainingEl.textContent;
+  const fit = fitScoreEl.textContent;
+  const total = totalScoreEl.textContent;
 
-  let msg = `You hired ${hired.length} candidates.\nRemaining budget: ${remainingBudgetText}.\nFit score: ${fit}.\nTotal score: ${total}.`;
+  let msg = `You hired ${hired.length} candidates.\nRemaining budget: ${remaining}.\nFit score: ${fit}.\nTotal score: ${total}.`;
 
-  if (hired.length < REQUIRED_HIRES) {
-    msg += `\n\nYou hired fewer than ${REQUIRED_HIRES}. Try hiring more people.`;
-  } else if (hired.length > REQUIRED_HIRES) {
-    msg += `\n\nYou hired more than ${REQUIRED_HIRES}. Try trimming your hires.`;
-  } else {
-    msg += `\n\nNice! You hired exactly ${REQUIRED_HIRES}. Can you optimize for a higher score?`;
-  }
+  if (hired.length < REQUIRED_HIRES)
+    msg += `\n\nYou hired fewer than ${REQUIRED_HIRES}.`;
+  else if (hired.length > REQUIRED_HIRES)
+    msg += `\n\nYou hired more than ${REQUIRED_HIRES}.`;
+  else
+    msg += `\n\nNice! You hired exactly ${REQUIRED_HIRES}.`;
 
   alert(msg);
 });
 
-// INIT
+// Start game
 function startGame() {
   pickRandomJob();
   generateCandidates(24);
