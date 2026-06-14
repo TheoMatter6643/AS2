@@ -1,7 +1,61 @@
-const REQUIRED_HIRES = 6;
+/****************************************************
+ * CONFIG
+ ****************************************************/
 
+const REQUIRED_HIRES = 6;
 let companyName = "";
 let permanentlyHired = new Set();
+let currentRound = 0;
+
+const roundOrder = [
+  "restaurant",
+  "elementary-school",
+  "big-tech",
+  "hospital",
+  "logistics-warehouse",
+  "final" // no immigrants in this round
+];
+
+/****************************************************
+ * INDUSTRY-SPECIFIC FACT POOLS
+ ****************************************************/
+
+const industryFacts = {
+  "restaurant": [
+    "Immigrants make up over 30% of all restaurant workers in the U.S.",
+    "Many restaurants rely on immigrant workers to fill early-morning and late-night shifts.",
+    "Immigrants help stabilize food service staffing during peak seasons."
+  ],
+  "elementary-school": [
+    "Immigrants help fill teacher shortages in rural and urban districts.",
+    "Bilingual immigrant educators support multilingual classrooms.",
+    "Immigrant workers often fill essential support roles in schools."
+  ],
+  "big-tech": [
+    "Over 45% of STEM PhD holders in the U.S. are immigrants.",
+    "Immigrants play a major role in software engineering and data science.",
+    "Many tech companies rely on immigrant talent for specialized roles."
+  ],
+  "hospital": [
+    "Nearly 1 in 4 doctors in the U.S. is an immigrant.",
+    "Immigrants are essential in nursing and long-term care roles.",
+    "Hospitals rely on immigrant workers to fill critical staffing gaps."
+  ],
+  "logistics-warehouse": [
+    "Immigrants are overrepresented in warehouse and distribution jobs.",
+    "Logistics companies rely on immigrant workers during peak demand seasons.",
+    "Immigrants help stabilize supply chain labor shortages."
+  ],
+  "final": [
+    "Without immigrants, many essential industries face severe staffing shortages.",
+    "Labor shortages intensify when immigrant workers are unavailable.",
+    "Immigrant workers help keep critical services running nationwide."
+  ]
+};
+
+/****************************************************
+ * JOB DEFINITIONS
+ ****************************************************/
 
 const jobs = [
   {
@@ -61,16 +115,9 @@ const jobs = [
   }
 ];
 
-const roundOrder = [
-  "restaurant",
-  "elementary-school",
-  "big-tech",
-  "hospital",
-  "logistics-warehouse",
-  "final"
-];
-
-let currentRound = 0;
+/****************************************************
+ * NAME, DEGREE, SKILL, TRAIT POOLS
+ ****************************************************/
 
 const degreePool = [
   "High School Student","High School Graduate","No Degree",
@@ -109,9 +156,9 @@ let uniqueFirstNames = [
 
 const backupNames = [...uniqueFirstNames];
 
-let currentJob = null;
-let candidates = [];
-let hiredIds = new Set();
+/****************************************************
+ * DOM ELEMENTS
+ ****************************************************/
 
 const jobTitleEl = document.getElementById("job-title");
 const budgetAmountEl = document.getElementById("budget-amount");
@@ -126,6 +173,10 @@ const totalScoreEl = document.getElementById("total-score");
 const resetBtn = document.getElementById("reset-btn");
 const checkBtn = document.getElementById("check-btn");
 
+/****************************************************
+ * UTILS
+ ****************************************************/
+
 function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function randChoice(a){return a[randInt(0,a.length-1)];}
 
@@ -135,6 +186,14 @@ function generateName(){
   const last=randChoice(["R.","T.","G.","K.","L.","P.","D.","S.","M.","Y.","V.","B.","H.","O.","C.","N.","Z.","Q.","J.","F."]);
   return `${first} ${last}`;
 }
+
+/****************************************************
+ * JOB SELECTION
+ ****************************************************/
+
+let currentJob = null;
+let candidates = [];
+let hiredIds = new Set();
 
 function pickRoundJob(){
   const id = roundOrder[currentRound];
@@ -149,6 +208,10 @@ function pickRoundJob(){
   jobDescriptionEl.textContent = currentJob.description.replace("COMPANY_NAME", companyName);
 }
 
+/****************************************************
+ * PAY + RELEVANCE
+ ****************************************************/
+
 function getBasePay(degree,skills){
   if(degree==="High School Student")return randInt(12,16);
   if(degree==="High School Graduate")return randInt(14,20);
@@ -162,13 +225,9 @@ function getBasePay(degree,skills){
   return randInt(18,30);
 }
 
-function adjustForImmigrant(base,imm,degree,skills){
+function adjustForImmigrant(base,imm){
   if(!imm)return base;
-  let p=base;
-  if(["Computer Science","Engineering","Medicine"].includes(degree))p-=randInt(4,10);
-  if(skills.includes("communication")||skills.includes("customer service"))p-=randInt(2,5);
-  p-=randInt(1,4);
-  return Math.max(p,12);
+  return Math.max(base - randInt(1,4), 12);
 }
 
 function isRelevantForJob(c,j){
@@ -180,15 +239,22 @@ function isRelevantForJob(c,j){
   return true;
 }
 
+/****************************************************
+ * CANDIDATE GENERATION
+ ****************************************************/
+
 function generateCandidates(){
   candidates=[];
   hiredIds=new Set();
   let tries=0;
 
+  const immigrantsAllowed = roundOrder[currentRound] !== "final";
+
   while(candidates.length<60 && tries<300){
     tries++;
 
-    const immigrant = Math.random() < 0.45;
+    const immigrant = immigrantsAllowed && Math.random() < 0.45;
+
     const degree = immigrant
       ? randChoice(["High School Graduate","No Degree","Computer Science","Software Engineering","Data Science","Information Technology","Mechanical Engineering","Biology","Nursing","Logistics","Culinary Arts","Business Administration"])
       : randChoice(degreePool);
@@ -202,7 +268,7 @@ function generateCandidates(){
     let reliability = randInt(3,10);
     if(immigrant) reliability = Math.min(reliability+1,10);
 
-    const pay = adjustForImmigrant(getBasePay(degree,skills),immigrant,degree,skills);
+    const pay = adjustForImmigrant(getBasePay(degree,skills),immigrant);
     const trait = immigrant ? randChoice(immigrantTraitPool) : randChoice(traitPool);
 
     const c = {
@@ -220,6 +286,10 @@ function generateCandidates(){
     if(isRelevantForJob(c,currentJob)) candidates.push(c);
   }
 }
+
+/****************************************************
+ * RENDERING
+ ****************************************************/
 
 function createCandidateCard(c,inHired){
   const card=document.createElement("div");
@@ -268,6 +338,10 @@ function renderHired(){
   });
 }
 
+/****************************************************
+ * DRAG & DROP
+ ****************************************************/
+
 candidateListEl.addEventListener("dragover",e=>e.preventDefault());
 candidateListEl.addEventListener("drop",e=>{
   const id=e.dataTransfer.getData("text/plain");
@@ -287,6 +361,10 @@ hiredDropzoneEl.addEventListener("drop",e=>{
   renderHired();
   updateScores();
 });
+
+/****************************************************
+ * SCORING
+ ****************************************************/
 
 function computeFitScore(c){
   let s=0;
@@ -326,6 +404,43 @@ function updateScores(){
   totalScoreEl.textContent = fit + budgetScore;
 }
 
+/****************************************************
+ * FACT POPUP
+ ****************************************************/
+
+function showIndustryFacts(){
+  const id = roundOrder[currentRound];
+  const facts = industryFacts[id];
+  const chosen = [];
+
+  while(chosen.length < 3){
+    const f = randChoice(facts);
+    if(!chosen.includes(f)) chosen.push(f);
+  }
+
+  alert("Workforce Facts:\n\n" + chosen.map(f => "• " + f).join("\n"));
+}
+
+/****************************************************
+ * FINAL SUMMARY
+ ****************************************************/
+
+function showFinalSummary(){
+  const totalHired = permanentlyHired.size;
+
+  alert(
+    "Final Summary\n\n" +
+    `Total workers hired: ${totalHired}\n` +
+    "Immigrant workers played a key role in stabilizing industries.\n" +
+    "The final round showed how shortages intensify without them.\n\n" +
+    "Thank you for playing!"
+  );
+}
+
+/****************************************************
+ * ROUND COMPLETION
+ ****************************************************/
+
 checkBtn.addEventListener("click",()=>{
   const hired=candidates.filter(c=>hiredIds.has(c.id));
   if(hired.length!==REQUIRED_HIRES){
@@ -335,33 +450,61 @@ checkBtn.addEventListener("click",()=>{
 
   hired.forEach(c=>permanentlyHired.add(c.id));
 
-  alert("Round complete!");
+  showIndustryFacts();
+
   currentRound++;
   startGame();
 });
 
-resetBtn.addEventListener("click",()=>{
-  currentRound=0;
+/****************************************************
+ * RESET
+ ****************************************************/
+
+resetBtn.addEventListener("click", () => {
+  currentRound = 0;
   permanentlyHired.clear();
+  hiredIds = new Set();
   startGame();
 });
 
-function startGame(){
-  if(currentRound>=roundOrder.length){
-    alert("You completed all rounds!");
+/****************************************************
+ * GAME LOOP
+ ****************************************************/
+
+function startGame() {
+  if (currentRound >= roundOrder.length) {
+    showFinalSummary();
     return;
   }
 
- const typeName = currentJob.title;  
-companyName = prompt(`What is your ${typeName}'s name?`) || "Your Company";
+  const roundId = roundOrder[currentRound];
 
-  alert(`Round ${currentRound+1}: ${roundOrder[currentRound].replace("-", " ")}`);
+  // Pick job first so we know the type for the prompt
+  if (roundId === "final") {
+    currentJob = randChoice(jobs);
+  } else {
+    currentJob = jobs.find(j => j.id === roundId);
+  }
 
-  pickRoundJob();
+  const typeName = currentJob.title;
+  companyName = prompt(`What is your ${typeName}'s name?`) || "Your Company";
+
+  alert(`Round ${currentRound + 1}: ${typeName}`);
+
+  jobTitleEl.textContent = currentJob.title;
+  budgetAmountEl.textContent = `$${currentJob.budget}/hr`;
+  hireCountEl.textContent = REQUIRED_HIRES;
+  hireCountInlineEl.textContent = REQUIRED_HIRES;
+  jobDescriptionEl.textContent = currentJob.description.replace("COMPANY_NAME", companyName);
+
   generateCandidates();
   renderCandidates();
   renderHired();
   updateScores();
 }
+
+/****************************************************
+ * START
+ ****************************************************/
 
 startGame();
