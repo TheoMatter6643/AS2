@@ -1,16 +1,19 @@
 const REQUIRED_HIRES = 6;
 
+let companyName = "";
+let permanentlyHired = new Set();
+
 const jobs = [
   {
     id: "restaurant",
     title: "Restaurant",
-    budget: 90,
+    budget: 140,
     preferredDegrees: ["Culinary Arts", "Hospitality", "Business Administration"],
     neutralDegrees: ["Music", "Fine Arts", "Education", "High School Graduate", "No Degree"],
     badDegrees: ["Aerospace Engineering", "Data Science", "Physics"],
     requiredSkills: ["cooking", "customer service", "cashier", "host", "logistics"],
     immigrantBonus: true,
-    description: `You are hiring for a busy restaurant. Hire ${REQUIRED_HIRES} workers.`
+    description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
   {
     id: "elementary-school",
@@ -21,18 +24,18 @@ const jobs = [
     badDegrees: ["Aerospace Engineering", "Mechanical Engineering", "Computer Science", "Software Engineering"],
     requiredSkills: ["teaching", "childcare", "communication", "writing"],
     immigrantBonus: true,
-    description: `You are hiring for an elementary school. Hire ${REQUIRED_HIRES} workers.`
+    description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
   {
     id: "big-tech",
-    title: "Big Tech Company",
+    title: "Tech Company",
     budget: 300,
     preferredDegrees: ["Computer Science", "Software Engineering", "Data Science", "Information Technology"],
     neutralDegrees: ["Mathematics", "Business Administration", "Physics", "High School Graduate"],
     badDegrees: ["Music", "Fine Arts", "Culinary Arts", "History", "Education"],
     requiredSkills: ["coding", "data", "debugging", "IT support"],
     immigrantBonus: true,
-    description: `You are hiring for a tech company. Hire ${REQUIRED_HIRES} workers.`
+    description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
   {
     id: "hospital",
@@ -43,7 +46,7 @@ const jobs = [
     badDegrees: ["Music", "Fine Arts", "Culinary Arts"],
     requiredSkills: ["caregiving", "analysis", "communication", "logistics"],
     immigrantBonus: true,
-    description: `You are hiring for a hospital. Hire ${REQUIRED_HIRES} workers.`
+    description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
   {
     id: "logistics-warehouse",
@@ -54,7 +57,7 @@ const jobs = [
     badDegrees: ["Music", "Fine Arts", "Culinary Arts", "Psychology"],
     requiredSkills: ["logistics", "warehouse", "forklift", "driver"],
     immigrantBonus: true,
-    description: `You are hiring for a warehouse. Hire ${REQUIRED_HIRES} workers.`
+    description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   }
 ];
 
@@ -142,7 +145,8 @@ function pickRoundJob(){
   budgetAmountEl.textContent = `$${currentJob.budget}/hr`;
   hireCountEl.textContent = REQUIRED_HIRES;
   hireCountInlineEl.textContent = REQUIRED_HIRES;
-  jobDescriptionEl.textContent = currentJob.description;
+
+  jobDescriptionEl.textContent = currentJob.description.replace("COMPANY_NAME", companyName);
 }
 
 function getBasePay(degree,skills){
@@ -212,6 +216,7 @@ function generateCandidates(){
       trait
     };
 
+    if(permanentlyHired.has(c.id)) continue;
     if(isRelevantForJob(c,currentJob)) candidates.push(c);
   }
 }
@@ -328,6 +333,8 @@ checkBtn.addEventListener("click",()=>{
     return;
   }
 
+  hired.forEach(c=>permanentlyHired.add(c.id));
+
   alert("Round complete!");
   currentRound++;
   startGame();
@@ -335,6 +342,7 @@ checkBtn.addEventListener("click",()=>{
 
 resetBtn.addEventListener("click",()=>{
   currentRound=0;
+  permanentlyHired.clear();
   startGame();
 });
 
@@ -344,7 +352,10 @@ function startGame(){
     return;
   }
 
+  companyName = prompt("Enter your company name for this round:") || "Your Company";
+
   alert(`Round ${currentRound+1}: ${roundOrder[currentRound].replace("-", " ")}`);
+
   pickRoundJob();
   generateCandidates();
   renderCandidates();
