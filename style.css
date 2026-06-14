@@ -223,3 +223,55 @@ footer {
   transform: translateY(1px);
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
+
+/* MOBILE LAYOUT — job description on top, two columns stay side-by-side */
+@media (max-width: 768px) {
+
+  /* Stack job description above the game panel */
+  main {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .job-panel {
+    order: 1;
+    width: 100%;
+  }
+
+  /* Keep candidate pool + hired side-by-side */
+  .game-panel {
+    order: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+
+  /* Make cards easier to tap */
+  .candidate-card {
+    padding: 0.9rem;
+    font-size: 1rem;
+  }
+
+  /* Bigger dropzone for fingers */
+  .hired-dropzone {
+    min-height: 200px;
+    padding: 1rem;
+  }
+
+  /* Allow scrolling inside candidate pool */
+  .candidate-list {
+    max-height: 50vh;
+  }
+
+  /* Slightly smaller header */
+  header h1 {
+    font-size: 1.3rem;
+  }
+
+  header .budget {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+  }
+}
+
