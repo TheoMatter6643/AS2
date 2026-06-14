@@ -1,312 +1,410 @@
-const TOTAL_BUDGET = 120;
-let budgetRemaining = TOTAL_BUDGET;
+// CONFIG
+const REQUIRED_HIRES = 6;
 
-const placements = {}; // slot → workerId
-
-const workers = [
+// JOB DEFINITIONS
+const jobs = [
   {
-    id: "w1",
-    name: "Maria R.",
-    pay: 18,
-    education: "hs",
-    immigrant: true,
-    skills: ["customer service", "bilingual"],
-    preference: "service",
-    reliability: 8
+    id: "big-tech",
+    title: "Big Tech Company",
+    budget: 150,
+    preferredDegrees: ["Computer Science", "Software Engineering", "Data Science", "Information Technology"],
+    neutralDegrees: ["Mathematics", "Business Administration", "Physics"],
+    badDegrees: ["Music", "Fine Arts", "Culinary Arts", "History", "Education"],
+    requiredSkills: ["coding", "data", "debugging", "IT support"],
+    immigrantBonus: true,
+    description: `
+      You are hiring for a large tech company. You need strong technical skills:
+      coding, data, debugging, and IT support. Degrees in CS, Software Engineering,
+      Data Science, or IT are ideal. Creative arts degrees are a poor fit here.
+      Stay under budget while hiring ${REQUIRED_HIRES} solid candidates.
+    `
   },
   {
-    id: "w2",
-    name: "Jamal T.",
-    pay: 25,
-    education: "college",
-    immigrant: false,
-    skills: ["data entry", "scheduling"],
-    preference: "white",
-    reliability: 9
+    id: "elementary-school",
+    title: "Elementary School",
+    budget: 120,
+    preferredDegrees: ["Education", "Psychology", "English", "History"],
+    neutralDegrees: ["Music", "Fine Arts", "Mathematics"],
+    badDegrees: ["Aerospace Engineering", "Mechanical Engineering", "Computer Science"],
+    requiredSkills: ["teaching", "childcare", "communication", "writing"],
+    immigrantBonus: true,
+    description: `
+      You are hiring for an elementary school. You need patient, communicative people
+      with teaching or childcare skills. Degrees in Education, Psychology, English,
+      or History are ideal. Highly specialized technical degrees are often a poor fit.
+      Stay under budget while hiring ${REQUIRED_HIRES} solid candidates.
+    `
   },
   {
-    id: "w3",
-    name: "Luis G.",
-    pay: 20,
-    education: "nohs",
-    immigrant: true,
-    skills: ["construction", "logistics"],
-    preference: "blue",
-    reliability: 7
+    id: "restaurant",
+    title: "Restaurant",
+    budget: 100,
+    preferredDegrees: ["Culinary Arts", "Hospitality", "Business Administration"],
+    neutralDegrees: ["Music", "Fine Arts", "Education"],
+    badDegrees: ["Aerospace Engineering", "Data Science", "Physics"],
+    requiredSkills: ["cooking", "customer service", "cashier", "host", "logistics"],
+    immigrantBonus: true,
+    description: `
+      You are hiring for a busy restaurant. You need people who can cook, serve,
+      handle customers, and keep things moving. Culinary, hospitality, or business
+      degrees are helpful but not required. Highly specialized technical degrees
+      may be a poor fit. Stay under budget while hiring ${REQUIRED_HIRES} solid candidates.
+    `
   },
   {
-    id: "w4",
-    name: "Aisha K.",
-    pay: 22,
-    education: "hs",
-    immigrant: true,
-    skills: ["retail", "cashier"],
-    preference: "service",
-    reliability: 8
+    id: "hospital",
+    title: "Hospital",
+    budget: 160,
+    preferredDegrees: ["Nursing", "Biology", "Medicine", "Psychology"],
+    neutralDegrees: ["Business Administration", "Mathematics"],
+    badDegrees: ["Music", "Fine Arts", "Culinary Arts"],
+    requiredSkills: ["caregiving", "analysis", "communication", "logistics"],
+    immigrantBonus: true,
+    description: `
+      You are hiring for a hospital. You need reliable, detail-oriented people with
+      caregiving, analysis, and communication skills. Degrees in Nursing, Biology,
+      Medicine, or Psychology are ideal. Pure arts degrees are usually a poor fit.
+      Stay under budget while hiring ${REQUIRED_HIRES} solid candidates.
+    `
   },
   {
-    id: "w5",
-    name: "Chen L.",
-    pay: 28,
-    education: "college",
-    immigrant: true,
-    skills: ["analysis", "excel"],
-    preference: "white",
-    reliability: 9
-  },
-  {
-    id: "w6",
-    name: "Sofia P.",
-    pay: 16,
-    education: "hs",
-    immigrant: false,
-    skills: ["host", "barista"],
-    preference: "service",
-    reliability: 7
-  },
-  {
-    id: "w7",
-    name: "Ahmed D.",
-    pay: 19,
-    education: "nohs",
-    immigrant: true,
-    skills: ["warehouse", "forklift"],
-    preference: "blue",
-    reliability: 7
-  },
-  {
-    id: "w8",
-    name: "Emily S.",
-    pay: 24,
-    education: "college",
-    immigrant: false,
-    skills: ["HR", "communication"],
-    preference: "white",
-    reliability: 8
-  },
-  {
-    id: "w9",
-    name: "Carlos M.",
-    pay: 17,
-    education: "hs",
-    immigrant: true,
-    skills: ["dishwasher", "prep cook"],
-    preference: "service",
-    reliability: 6
-  },
-  {
-    id: "w10",
-    name: "Hana Y.",
-    pay: 21,
-    education: "college",
-    immigrant: true,
-    skills: ["IT support", "troubleshooting"],
-    preference: "white",
-    reliability: 8
-  },
-  {
-    id: "w11",
-    name: "Igor V.",
-    pay: 19,
-    education: "hs",
-    immigrant: true,
-    skills: ["driver", "delivery"],
-    preference: "blue",
-    reliability: 7
-  },
-  {
-    id: "w12",
-    name: "Grace B.",
-    pay: 23,
-    education: "college",
-    immigrant: false,
-    skills: ["marketing", "social media"],
-    preference: "white",
-    reliability: 8
+    id: "logistics-warehouse",
+    title: "Logistics Warehouse",
+    budget: 110,
+    preferredDegrees: ["Logistics", "Business Administration", "Mechanical Engineering"],
+    neutralDegrees: ["Mathematics", "Physics"],
+    badDegrees: ["Music", "Fine Arts", "Culinary Arts"],
+    requiredSkills: ["logistics", "warehouse", "forklift", "driver"],
+    immigrantBonus: true,
+    description: `
+      You are hiring for a logistics warehouse. You need people who can move goods,
+      manage inventory, and operate equipment. Logistics, business, or mechanical
+      backgrounds are helpful. Pure arts degrees are a poor fit. Stay under budget
+      while hiring ${REQUIRED_HIRES} solid candidates.
+    `
   }
 ];
 
-const workerListEl = document.getElementById("worker-list");
-const budgetRemainingEl = document.getElementById("budget-remaining");
-const totalScoreEl = document.getElementById("total-score");
-const budgetStatusEl = document.getElementById("budget-status");
+// DEGREE + SKILL POOLS
+const degreePool = [
+  "Computer Science",
+  "Software Engineering",
+  "Data Science",
+  "Information Technology",
+  "Mathematics",
+  "Business Administration",
+  "Physics",
+  "Music",
+  "Fine Arts",
+  "Culinary Arts",
+  "History",
+  "Education",
+  "Psychology",
+  "Nursing",
+  "Biology",
+  "Mechanical Engineering",
+  "Aerospace Engineering",
+  "Logistics"
+];
 
-function createWorkerCard(worker) {
+const skillPool = [
+  "coding",
+  "data",
+  "debugging",
+  "IT support",
+  "teaching",
+  "childcare",
+  "communication",
+  "writing",
+  "cooking",
+  "customer service",
+  "cashier",
+  "host",
+  "logistics",
+  "warehouse",
+  "forklift",
+  "driver",
+  "analysis",
+  "caregiving",
+  "marketing",
+  "social media"
+];
+
+const traitPool = [
+  "reliable",
+  "creative",
+  "slow learner",
+  "bilingual",
+  "perfectionist",
+  "disorganized",
+  "team‑player",
+  "independent"
+];
+
+// STATE
+let currentJob = null;
+let candidates = [];
+let hiredIds = new Set();
+
+// DOM
+const jobTitleEl = document.getElementById("job-title");
+const budgetAmountEl = document.getElementById("budget-amount");
+const hireCountEl = document.getElementById("hire-count");
+const hireCountInlineEl = document.getElementById("hire-count-inline");
+const jobDescriptionEl = document.getElementById("job-description");
+const candidateListEl = document.getElementById("candidate-list");
+const hiredDropzoneEl = document.getElementById("hired-dropzone");
+const budgetRemainingEl = document.getElementById("budget-remaining");
+const fitScoreEl = document.getElementById("fit-score");
+const totalScoreEl = document.getElementById("total-score");
+const resetBtn = document.getElementById("reset-btn");
+const checkBtn = document.getElementById("check-btn");
+
+// UTIL
+function randInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randChoice(arr) {
+  return arr[randInt(0, arr.length - 1)];
+}
+
+// JOB + CANDIDATE GENERATION
+function pickRandomJob() {
+  currentJob = randChoice(jobs);
+  jobTitleEl.textContent = currentJob.title;
+  budgetAmountEl.textContent = `$${currentJob.budget}/hr`;
+  hireCountEl.textContent = REQUIRED_HIRES;
+  hireCountInlineEl.textContent = REQUIRED_HIRES;
+  jobDescriptionEl.textContent = currentJob.description.trim();
+}
+
+function generateCandidates(count = 24) {
+  candidates = [];
+  hiredIds = new Set();
+
+  for (let i = 0; i < count; i++) {
+    const degree = randChoice(degreePool);
+    const skills = [];
+    const numSkills = randInt(2, 4);
+    for (let j = 0; j < numSkills; j++) {
+      const skill = randChoice(skillPool);
+      if (!skills.includes(skill)) skills.push(skill);
+    }
+
+    const immigrant = Math.random() < 0.5;
+    const reliability = randInt(3, 10);
+    const pay = randInt(15, 40);
+    const trait = randChoice(traitPool);
+
+    candidates.push({
+      id: `c${i + 1}`,
+      name: generateName(i),
+      degree,
+      skills,
+      immigrant,
+      reliability,
+      pay,
+      trait
+    });
+  }
+}
+
+function generateName(index) {
+  const firstNames = ["Maria", "Jamal", "Luis", "Aisha", "Chen", "Sofia", "Ahmed", "Emily", "Carlos", "Hana", "Igor", "Grace", "Nadia", "Omar", "Lina", "Victor", "Mei", "Ravi", "Fatima", "Jonas"];
+  const lastNames = ["R.", "T.", "G.", "K.", "L.", "P.", "D.", "S.", "M.", "Y.", "V.", "B.", "H.", "O.", "C.", "N.", "Z.", "Q.", "J.", "F."];
+  return `${randChoice(firstNames)} ${randChoice(lastNames)}`;
+}
+
+// RENDER
+function renderCandidates() {
+  candidateListEl.innerHTML = "";
+  candidates.forEach(c => {
+    if (!hiredIds.has(c.id)) {
+      candidateListEl.appendChild(createCandidateCard(c, false));
+    }
+  });
+}
+
+function renderHired() {
+  hiredDropzoneEl.innerHTML = "";
+  hiredDropzoneEl.classList.toggle("empty", hiredIds.size === 0);
+  candidates.forEach(c => {
+    if (hiredIds.has(c.id)) {
+      hiredDropzoneEl.appendChild(createCandidateCard(c, true));
+    }
+  });
+}
+
+function createCandidateCard(candidate, inHired) {
   const card = document.createElement("div");
-  card.className = "worker-card";
-  card.draggable = true;
-  card.dataset.workerId = worker.id;
+  card.className = "candidate-card";
+  card.draggable = !inHired;
+  card.dataset.id = candidate.id;
+
+  const degreeLabel = `(${candidate.degree})`;
+  const immigrantLabel = candidate.immigrant ? "Immigrant" : "Non‑immigrant";
 
   card.innerHTML = `
-    <div class="worker-header">
-      <span>${worker.name}</span>
-      <span class="worker-pay">$${worker.pay}/hr</span>
+    <div class="candidate-header">
+      <span>${candidate.name}</span>
+      <span class="candidate-pay">$${candidate.pay}/hr</span>
     </div>
-    <div class="worker-meta">
-      Prefers: ${worker.preference} • Reliability: ${worker.reliability}/10
+    <div class="candidate-meta">
+      Degree: ${degreeLabel} • Reliability: ${candidate.reliability}/10 • Trait: ${candidate.trait}
     </div>
-    <div class="worker-tags">
-      <span class="tag education-${worker.education}">
-        ${worker.education === "nohs" ? "No HS" : worker.education === "hs" ? "HS" : "College"}
-      </span>
-      ${worker.immigrant ? `<span class="tag immigrant">Immigrant</span>` : ""}
-      ${worker.skills.map(s => `<span class="tag">${s}</span>`).join("")}
+    <div class="candidate-tags">
+      <span class="tag degree">${candidate.degree}</span>
+      <span class="tag immigrant">${immigrantLabel}</span>
+      ${candidate.skills.map(s => `<span class="tag skill">${s}</span>`).join("")}
     </div>
   `;
 
-  card.addEventListener("dragstart", (e) => {
-    card.classList.add("dragging");
-    e.dataTransfer.setData("text/plain", worker.id);
-  });
-
-  card.addEventListener("dragend", () => {
-    card.classList.remove("dragging");
-  });
+  if (!inHired) {
+    card.addEventListener("dragstart", (e) => {
+      card.classList.add("dragging");
+      e.dataTransfer.setData("text/plain", candidate.id);
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
+    });
+  }
 
   return card;
 }
 
-function renderWorkers() {
-  workerListEl.innerHTML = "";
-  workers.forEach(worker => {
-    if (!Object.values(placements).includes(worker.id)) {
-      workerListEl.appendChild(createWorkerCard(worker));
-    }
-  });
-}
-
-const slots = document.querySelectorAll(".slot");
-
-slots.forEach(slot => {
-  slot.addEventListener("dragover", (e) => e.preventDefault());
-
-  slot.addEventListener("drop", (e) => {
-    e.preventDefault();
-    const workerId = e.dataTransfer.getData("text/plain");
-    const slotId = slot.dataset.slot;
-
-    placements[slotId] = workerId;
-    updateSlots();
-    updateBudget();
-    updateScores();
-  });
+// DRAG & DROP
+candidateListEl.addEventListener("dragover", (e) => e.preventDefault());
+candidateListEl.addEventListener("drop", (e) => {
+  e.preventDefault();
+  const id = e.dataTransfer.getData("text/plain");
+  if (!id) return;
+  hiredIds.delete(id);
+  renderCandidates();
+  renderHired();
+  updateScores();
 });
 
-function updateSlots() {
-  slots.forEach(slot => {
-    const slotId = slot.dataset.slot;
-    const workerId = placements[slotId];
+hiredDropzoneEl.addEventListener("dragover", (e) => e.preventDefault());
+hiredDropzoneEl.addEventListener("drop", (e) => {
+  e.preventDefault();
+  const id = e.dataTransfer.getData("text/plain");
+  if (!id) return;
+  hiredIds.add(id);
+  renderCandidates();
+  renderHired();
+  updateScores();
+});
 
-    slot.innerHTML = "";
-    if (workerId) {
-      const worker = workers.find(w => w.id === workerId);
-      const card = createWorkerCard(worker);
-      card.draggable = false;
-      slot.classList.add("filled");
-      slot.appendChild(card);
-    } else {
-      slot.classList.remove("filled");
-      slot.textContent = "Drop worker";
-    }
-  });
-
-  renderWorkers();
-}
-
-function updateBudget() {
-  const used = Object.values(placements)
-    .map(id => workers.find(w => w.id === id))
-    .reduce((sum, w) => sum + (w ? w.pay : 0), 0);
-
-  budgetRemaining = TOTAL_BUDGET - used;
-  budgetRemainingEl.textContent = `$${budgetRemaining}/hr`;
-
-  if (budgetRemaining < 0) {
-    budgetStatusEl.textContent = "Over Budget";
-    budgetStatusEl.className = "highlight-budget-bad";
-  } else {
-    budgetStatusEl.textContent = "OK";
-    budgetStatusEl.className = "highlight-budget-ok";
-  }
-}
-
-function scoreWorkerForBoard(worker, board) {
+// SCORING
+function computeFitScoreForCandidate(candidate) {
   let score = 0;
 
-  score += Math.round(worker.reliability / 2);
-
-  if (board === "blue") {
-    if (worker.skills.includes("construction") || worker.skills.includes("warehouse") || worker.skills.includes("driver")) {
-      score += 2;
-    }
-    if (worker.immigrant) score += 1;
+  // Degree fit
+  if (currentJob.preferredDegrees.includes(candidate.degree)) {
+    score += 3;
+  } else if (currentJob.neutralDegrees.includes(candidate.degree)) {
+    score += 1;
+  } else if (currentJob.badDegrees.includes(candidate.degree)) {
+    score -= 3;
   }
 
-  if (board === "white") {
-    if (worker.education === "college") score += 2;
-    if (worker.reliability >= 8) score += 1;
+  // Skills fit
+  const skillMatches = candidate.skills.filter(s => currentJob.requiredSkills.includes(s)).length;
+  if (skillMatches >= 2) {
+    score += 3;
+  } else if (skillMatches === 1) {
+    score += 1;
+  } else {
+    score -= 2;
   }
 
-  if (board === "service") {
-    if (worker.skills.includes("bilingual") || worker.skills.includes("host") || worker.skills.includes("cashier") || worker.skills.includes("barista")) {
-      score += 2;
-    }
-    if (worker.education === "hs" || worker.education === "nohs") score += 1;
-    if (worker.immigrant) score += 1;
+  // Reliability
+  if (candidate.reliability >= 8) {
+    score += 2;
+  } else if (candidate.reliability <= 5) {
+    score -= 2;
   }
 
-  if (board === "unemployed") {
-    if (worker.reliability <= 7) score += 1;
-    if (worker.preference !== board) score += 1;
-    if (worker.immigrant) score += 1;
+  // Immigrant bonus
+  if (currentJob.immigrantBonus && candidate.immigrant) {
+    score += 1;
+  }
+
+  // Over/under qualification (rough heuristic)
+  if (candidate.degree === "Aerospace Engineering" && currentJob.id === "restaurant") {
+    score -= 3;
+  }
+  if (candidate.degree === "Culinary Arts" && currentJob.id === "big-tech") {
+    score -= 3;
   }
 
   return score;
 }
 
 function updateScores() {
-  const boards = ["blue", "white", "service", "unemployed"];
-  let total = 0;
+  // Budget
+  const hired = candidates.filter(c => hiredIds.has(c.id));
+  const totalPay = hired.reduce((sum, c) => sum + c.pay, 0);
+  const remainingBudget = currentJob.budget - totalPay;
+  budgetRemainingEl.textContent = `$${remainingBudget}/hr`;
 
-  boards.forEach(board => {
-    const boardSlots = Object.keys(placements).filter(slotId => slotId.startsWith(board));
-    let boardScore = 0;
-
-    boardSlots.forEach(slotId => {
-      const workerId = placements[slotId];
-      const worker = workers.find(w => w.id === workerId);
-      if (worker) boardScore += scoreWorkerForBoard(worker, board);
-    });
-
-    document.querySelector(`[data-score="${board}"]`).textContent = boardScore;
-    total += boardScore;
+  // Fit score
+  let fitScore = 0;
+  hired.forEach(c => {
+    fitScore += computeFitScoreForCandidate(c);
   });
 
-  totalScoreEl.textContent = total;
-}
-
-document.getElementById("reset-btn").addEventListener("click", () => {
-  Object.keys(placements).forEach(k => delete placements[k]);
-  updateSlots();
-  updateBudget();
-  updateScores();
-});
-
-document.getElementById("check-btn").addEventListener("click", () => {
-  const filledSlots = Object.keys(placements).length;
-
-  let message = `You placed ${filledSlots} workers.\nTotal score: ${totalScoreEl.textContent}.\nBudget remaining: $${budgetRemaining}/hr.`;
-
-  if (budgetRemaining < 0) {
-    message += "\n\nYou are over budget!";
-  } else if (filledSlots < 12) {
-    message += "\n\nYou still have empty slots.";
-  } else {
-    message += "\n\nNice! You built a full workforce.";
+  // Penalty if wrong number of hires
+  if (hired.length !== REQUIRED_HIRES) {
+    fitScore -= Math.abs(hired.length - REQUIRED_HIRES) * 5;
   }
 
-  alert(message);
+  fitScoreEl.textContent = fitScore;
+
+  // Budget score (only positive if under budget)
+  let budgetScore = 0;
+  if (remainingBudget > 0) {
+    budgetScore = Math.round((remainingBudget / currentJob.budget) * 100);
+  } else {
+    budgetScore = Math.round((remainingBudget / currentJob.budget) * 50); // penalty if over
+  }
+
+  const totalScore = fitScore + budgetScore;
+  totalScoreEl.textContent = totalScore;
+}
+
+// BUTTONS
+resetBtn.addEventListener("click", () => {
+  startGame();
 });
 
-updateBudget();
-updateScores();
+checkBtn.addEventListener("click", () => {
+  const hired = candidates.filter(c => hiredIds.has(c.id));
+  const remainingBudgetText = budgetRemainingEl.textContent;
+  const fit = parseInt(fitScoreEl.textContent, 10);
+  const total = parseInt(totalScoreEl.textContent, 10);
+
+  let msg = `You hired ${hired.length} candidates.\nRemaining budget: ${remainingBudgetText}.\nFit score: ${fit}.\nTotal score: ${total}.`;
+
+  if (hired.length < REQUIRED_HIRES) {
+    msg += `\n\nYou hired fewer than ${REQUIRED_HIRES}. Try hiring more people.`;
+  } else if (hired.length > REQUIRED_HIRES) {
+    msg += `\n\nYou hired more than ${REQUIRED_HIRES}. Try trimming your hires.`;
+  } else {
+    msg += `\n\nNice! You hired exactly ${REQUIRED_HIRES}. Can you optimize for a higher score?`;
+  }
+
+  alert(msg);
+});
+
+// INIT
+function startGame() {
+  pickRandomJob();
+  generateCandidates(24);
+  renderCandidates();
+  renderHired();
+  updateScores();
+}
+
+startGame();
