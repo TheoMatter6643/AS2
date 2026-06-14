@@ -9,110 +9,46 @@
   <header>
     <h1>Workforce Architect: Immigrants in the Workforce</h1>
     <div class="budget">
-      Budget: <span id="budget-remaining">$120/hr</span>
+      Job: <span id="job-title">Loading...</span> • 
+      Budget: <span id="budget-amount">$0/hr</span> • 
+      Hires required: <span id="hire-count">0</span>
     </div>
   </header>
 
   <main>
-    <!-- Worker Pool -->
-    <section class="worker-pool">
-      <h2>
-        Worker Pool
-        <span class="subtitle">Drag workers into boards below</span>
-      </h2>
-      <div class="worker-list" id="worker-list"></div>
+    <!-- Job Description -->
+    <section class="job-panel">
+      <h2>Job Description</h2>
+      <div id="job-description"></div>
     </section>
 
-    <!-- Boards -->
-    <section class="boards">
-
-      <!-- Blue Collar -->
-      <div class="board" data-board="blue">
-        <div class="board-header">
-          <div class="board-title">
-            Blue‑Collar
-            <span>construction, logistics, manual work</span>
-          </div>
-          <div class="board-score">Score: <span data-score="blue">0</span></div>
-        </div>
-        <div class="board-slots">
-          <div class="slot" data-slot="blue-1">Drop worker</div>
-          <div class="slot" data-slot="blue-2">Drop worker</div>
-          <div class="slot" data-slot="blue-3">Drop worker</div>
-          <div class="slot" data-slot="blue-4">Drop worker</div>
-          <div class="slot" data-slot="blue-5">Drop worker</div>
-          <div class="slot" data-slot="blue-6">Drop worker</div>
-        </div>
+    <!-- Candidate Pool + Hired -->
+    <section class="game-panel">
+      <div class="candidate-section">
+        <h2>Candidate Pool</h2>
+        <p class="hint">Drag candidates into the "Hired" area. Choose exactly the required number and stay under budget.</p>
+        <div class="candidate-list" id="candidate-list"></div>
       </div>
 
-      <!-- White Collar -->
-      <div class="board" data-board="white">
-        <div class="board-header">
-          <div class="board-title">
-            White‑Collar
-            <span>office, admin, professional</span>
-          </div>
-          <div class="board-score">Score: <span data-score="white">0</span></div>
-        </div>
-        <div class="board-slots">
-          <div class="slot" data-slot="white-1">Drop worker</div>
-          <div class="slot" data-slot="white-2">Drop worker</div>
-          <div class="slot" data-slot="white-3">Drop worker</div>
-          <div class="slot" data-slot="white-4">Drop worker</div>
-          <div class="slot" data-slot="white-5">Drop worker</div>
-          <div class="slot" data-slot="white-6">Drop worker</div>
+      <div class="hired-section">
+        <h2>Your Hires</h2>
+        <p class="hint">Drop candidates here. You must hire exactly <span id="hire-count-inline">0</span>.</p>
+        <div class="hired-dropzone" id="hired-dropzone">
+          <!-- Hired candidates appear here -->
         </div>
       </div>
-
-      <!-- Service Sector -->
-      <div class="board" data-board="service">
-        <div class="board-header">
-          <div class="board-title">
-            Service Sector
-            <span>food, retail, hospitality</span>
-          </div>
-          <div class="board-score">Score: <span data-score="service">0</span></div>
-        </div>
-        <div class="board-slots">
-          <div class="slot" data-slot="service-1">Drop worker</div>
-          <div class="slot" data-slot="service-2">Drop worker</div>
-          <div class="slot" data-slot="service-3">Drop worker</div>
-          <div class="slot" data-slot="service-4">Drop worker</div>
-          <div class="slot" data-slot="service-5">Drop worker</div>
-          <div class="slot" data-slot="service-6">Drop worker</div>
-        </div>
-      </div>
-
-      <!-- Unemployed -->
-      <div class="board" data-board="unemployed">
-        <div class="board-header">
-          <div class="board-title">
-            Unemployed
-            <span>available but not placed</span>
-          </div>
-          <div class="board-score">Score: <span data-score="unemployed">0</span></div>
-        </div>
-        <div class="board-slots">
-          <div class="slot" data-slot="unemployed-1">Drop worker</div>
-          <div class="slot" data-slot="unemployed-2">Drop worker</div>
-          <div class="slot" data-slot="unemployed-3">Drop worker</div>
-          <div class="slot" data-slot="unemployed-4">Drop worker</div>
-          <div class="slot" data-slot="unemployed-5">Drop worker</div>
-          <div class="slot" data-slot="unemployed-6">Drop worker</div>
-        </div>
-      </div>
-
     </section>
   </main>
 
   <footer>
     <div class="summary">
+      <span>Remaining Budget: <strong id="budget-remaining">$0/hr</strong></span>
+      <span>Fit Score: <strong id="fit-score">0</strong></span>
       <span>Total Score: <strong id="total-score">0</strong></span>
-      <span>Budget Status: <strong id="budget-status" class="highlight-budget-ok">OK</strong></span>
     </div>
     <div>
-      <button class="btn secondary" id="reset-btn">Reset</button>
-      <button class="btn" id="check-btn">Check Workforce</button>
+      <button class="btn secondary" id="reset-btn">New Job</button>
+      <button class="btn" id="check-btn">Evaluate Hires</button>
     </div>
   </footer>
 
