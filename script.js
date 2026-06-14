@@ -243,7 +243,7 @@ function createCandidateCard(candidate, inHired) {
   card.dataset.id = candidate.id;
 
   const degreeLabel = `(${candidate.degree})`;
-  const immigrantLabel = candidate.immigrant ? "Immigrant" : "Non‑immigrant";
+  const immigrantLabel = candidate.immigrant ? "Immigrant" : null;
 
   card.innerHTML = `
     <div class="candidate-header">
@@ -255,7 +255,7 @@ function createCandidateCard(candidate, inHired) {
     </div>
     <div class="candidate-tags">
       <span class="tag degree">${candidate.degree}</span>
-      <span class="tag immigrant">${immigrantLabel}</span>
+      ${candidate.immigrant ? `<span class="tag immigrant">Immigrant</span>` : ""}
       ${candidate.skills.map(s => `<span class="tag skill">${s}</span>`).join("")}
     </div>
   `;
