@@ -6,6 +6,7 @@ const REQUIRED_HIRES = 6;
 let companyName = "";
 let permanentlyHired = new Set();
 let currentRound = 0;
+let totalImmigrantHires = 0;
 
 const roundOrder = [
   "restaurant",
@@ -13,7 +14,7 @@ const roundOrder = [
   "big-tech",
   "hospital",
   "logistics-warehouse",
-  "final" // no immigrants in this round
+  "final" // hardest: no immigrants, food service (restaurant)
 ];
 
 /****************************************************
@@ -24,32 +25,44 @@ const industryFacts = {
   "restaurant": [
     "Immigrants make up over 30% of all restaurant workers in the U.S.",
     "Many restaurants rely on immigrant workers to fill early-morning and late-night shifts.",
-    "Immigrants help stabilize food service staffing during peak seasons."
+    "Immigrants help stabilize food service staffing during peak seasons.",
+    "Food service is one of the industries most reliant on immigrant labor.",
+    "Immigrant workers often keep restaurants open during labor shortages."
   ],
   "elementary-school": [
     "Immigrants help fill teacher shortages in rural and urban districts.",
     "Bilingual immigrant educators support multilingual classrooms.",
-    "Immigrant workers often fill essential support roles in schools."
+    "Immigrant workers often fill essential support roles in schools.",
+    "Some districts rely on immigrant teachers recruited from abroad.",
+    "Immigrant families contribute to growing school enrollment in many areas."
   ],
   "big-tech": [
     "Over 45% of STEM PhD holders in the U.S. are immigrants.",
     "Immigrants play a major role in software engineering and data science.",
-    "Many tech companies rely on immigrant talent for specialized roles."
+    "Many tech companies rely on immigrant talent for specialized roles.",
+    "Immigrant-founded companies employ millions of workers.",
+    "Immigrants are heavily represented in high-skill tech roles."
   ],
   "hospital": [
     "Nearly 1 in 4 doctors in the U.S. is an immigrant.",
     "Immigrants are essential in nursing and long-term care roles.",
-    "Hospitals rely on immigrant workers to fill critical staffing gaps."
+    "Hospitals rely on immigrant workers to fill critical staffing gaps.",
+    "Immigrant health workers support care in underserved communities.",
+    "Immigrant doctors and nurses help address physician shortages."
   ],
   "logistics-warehouse": [
     "Immigrants are overrepresented in warehouse and distribution jobs.",
     "Logistics companies rely on immigrant workers during peak demand seasons.",
-    "Immigrants help stabilize supply chain labor shortages."
+    "Immigrants help stabilize supply chain labor shortages.",
+    "Many delivery and warehouse roles are filled by immigrant workers.",
+    "Immigrant workers support the movement of goods across the country."
   ],
   "final": [
     "Without immigrants, many essential industries face severe staffing shortages.",
     "Labor shortages intensify when immigrant workers are unavailable.",
-    "Immigrant workers help keep critical services running nationwide."
+    "Immigrant workers help keep critical services running nationwide.",
+    "Removing immigrant workers can expose how fragile some industries are.",
+    "Immigrant labor often fills gaps that would otherwise remain unfilled."
   ]
 };
 
@@ -95,7 +108,7 @@ const jobs = [
     id: "hospital",
     title: "Hospital",
     budget: 320,
-    preferredDegrees: ["Nursing", "Biology", "Medicine", "Psychology"],
+    preferredDegrees: ["Nursing", "Biology", "Medicine", "Doctor", "Psychology"],
     neutralDegrees: ["Business Administration", "Mathematics", "High School Graduate"],
     badDegrees: ["Music", "Fine Arts", "Culinary Arts"],
     requiredSkills: ["caregiving", "analysis", "communication", "logistics"],
@@ -124,7 +137,7 @@ const degreePool = [
   "Computer Science","Software Engineering","Data Science","Information Technology",
   "Mathematics","Business Administration","Physics","Music","Fine Arts","Culinary Arts",
   "History","Education","Psychology","Nursing","Biology","Mechanical Engineering",
-  "Aerospace Engineering","Logistics"
+  "Aerospace Engineering","Logistics","Medicine","Doctor"
 ];
 
 const skillPool = [
@@ -195,19 +208,6 @@ let currentJob = null;
 let candidates = [];
 let hiredIds = new Set();
 
-function pickRoundJob(){
-  const id = roundOrder[currentRound];
-  if(id==="final") currentJob = randChoice(jobs);
-  else currentJob = jobs.find(j=>j.id===id);
-
-  jobTitleEl.textContent = currentJob.title;
-  budgetAmountEl.textContent = `$${currentJob.budget}/hr`;
-  hireCountEl.textContent = REQUIRED_HIRES;
-  hireCountInlineEl.textContent = REQUIRED_HIRES;
-
-  jobDescriptionEl.textContent = currentJob.description.replace("COMPANY_NAME", companyName);
-}
-
 /****************************************************
  * PAY + RELEVANCE
  ****************************************************/
@@ -217,7 +217,7 @@ function getBasePay(degree,skills){
   if(degree==="High School Graduate")return randInt(14,20);
   if(degree==="No Degree")return randInt(12,18);
   if(["Computer Science","Software Engineering","Data Science","Information Technology"].includes(degree))return randInt(40,70);
-  if(["Nursing","Biology","Psychology","Medicine"].includes(degree))return randInt(35,65);
+  if(["Nursing","Biology","Psychology","Medicine","Doctor"].includes(degree))return randInt(35,65);
   if(["Education","History","English"].includes(degree))return randInt(22,38);
   if(skills.includes("warehouse")||skills.includes("forklift")||degree==="Logistics")return randInt(18,32);
   if(degree==="Culinary Arts"||skills.includes("cooking"))return randInt(15,24);
@@ -250,18 +250,37 @@ function generateCandidates(){
 
   const immigrantsAllowed = roundOrder[currentRound] !== "final";
 
-  while(candidates.length<60 && tries<300){
+  while(candidates.length<60 && tries<400){
     tries++;
 
     const immigrant = immigrantsAllowed && Math.random() < 0.45;
 
-    const degree = immigrant
-      ? randChoice(["High School Graduate","No Degree","Computer Science","Software Engineering","Data Science","Information Technology","Mechanical Engineering","Biology","Nursing","Logistics","Culinary Arts","Business Administration"])
-      : randChoice(degreePool);
+    let degree;
+    if(currentJob.id === "elementary-school"){
+      degree = immigrant
+        ? randChoice(["Education","Psychology","English","History","High School Graduate"])
+        : randChoice(["Education","Psychology","English","History","Music","Fine Arts","High School Graduate"]);
+    } else if(currentJob.id === "hospital"){
+      degree = immigrant
+        ? randChoice(["Nursing","Biology","Medicine","Doctor","Psychology","High School Graduate"])
+        : randChoice(["Nursing","Biology","Medicine","Doctor","Psychology","Business Administration","High School Graduate"]);
+    } else {
+      degree = immigrant
+        ? randChoice(["High School Graduate","No Degree","Computer Science","Software Engineering","Data Science","Information Technology","Mechanical Engineering","Biology","Nursing","Logistics","Culinary Arts","Business Administration"])
+        : randChoice(degreePool);
+    }
 
     const skills=[];
-    for(let i=0;i<randInt(2,4);i++){
-      const s=randChoice(skillPool);
+    const skillCount = randInt(2,4);
+    for(let i=0;i<skillCount;i++){
+      let s;
+      if(currentJob.id==="elementary-school"){
+        s = randChoice(["teaching","childcare","communication","writing","communication","teaching"]);
+      } else if(currentJob.id==="hospital"){
+        s = randChoice(["caregiving","analysis","communication","logistics","caregiving"]);
+      } else {
+        s = randChoice(skillPool);
+      }
       if(!skills.includes(s))skills.push(s);
     }
 
@@ -272,7 +291,7 @@ function generateCandidates(){
     const trait = immigrant ? randChoice(immigrantTraitPool) : randChoice(traitPool);
 
     const c = {
-      id:`c${tries}`,
+      id:`c${currentRound}-${tries}`,
       name:generateName(),
       degree,
       skills,
@@ -368,18 +387,39 @@ hiredDropzoneEl.addEventListener("drop",e=>{
 
 function computeFitScore(c){
   let s=0;
-  if(currentJob.preferredDegrees.includes(c.degree))s+=3;
-  else if(currentJob.neutralDegrees.includes(c.degree))s+=1;
-  else if(currentJob.badDegrees.includes(c.degree))s-=3;
 
+  // Degree relevance
+  if(currentJob.preferredDegrees.includes(c.degree)) s+=3;
+  else if(currentJob.neutralDegrees.includes(c.degree)) s+=1;
+  else if(currentJob.badDegrees.includes(c.degree)) s-=3;
+
+  // Strong penalty if degree is irrelevant (not preferred or neutral)
+  if(
+    !currentJob.preferredDegrees.includes(c.degree) &&
+    !currentJob.neutralDegrees.includes(c.degree)
+  ){
+    s-=4;
+  }
+
+  // Extra strong penalty for hospital with no/low degree
+  if(
+    currentJob.id==="hospital" &&
+    (c.degree==="No Degree" || c.degree==="High School Graduate" || c.degree==="High School Student")
+  ){
+    s-=6;
+  }
+
+  // Skills
   const matches=c.skills.filter(x=>currentJob.requiredSkills.includes(x)).length;
   if(matches>=2)s+=3;
   else if(matches===1)s+=1;
   else s-=2;
 
+  // Reliability: low reliability hurts, but can be offset by good degree
   if(c.reliability>=8)s+=2;
   else if(c.reliability<=5)s-=2;
 
+  // Immigrant structural bonus (shortage-filling)
   if(currentJob.immigrantBonus && c.immigrant)s+=1;
 
   return s;
@@ -393,7 +433,11 @@ function updateScores(){
   budgetRemainingEl.textContent=`$${remaining}/hr`;
 
   let fit=hired.reduce((a,c)=>a+computeFitScore(c),0);
-  if(hired.length!==REQUIRED_HIRES) fit-=Math.abs(hired.length-REQUIRED_HIRES)*5;
+
+  // Only penalize wrong count AFTER player starts hiring
+  if(hired.length>0 && hired.length!==REQUIRED_HIRES){
+    fit-=Math.abs(hired.length-REQUIRED_HIRES)*5;
+  }
 
   fitScoreEl.textContent=fit;
 
@@ -408,12 +452,12 @@ function updateScores(){
  * FACT POPUP
  ****************************************************/
 
-function showIndustryFacts(){
-  const id = roundOrder[currentRound];
+function showIndustryFacts(roundIndex){
+  const id = roundOrder[roundIndex];
   const facts = industryFacts[id];
   const chosen = [];
 
-  while(chosen.length < 3){
+  while(chosen.length < 3 && chosen.length < facts.length){
     const f = randChoice(facts);
     if(!chosen.includes(f)) chosen.push(f);
   }
@@ -431,9 +475,10 @@ function showFinalSummary(){
   alert(
     "Final Summary\n\n" +
     `Total workers hired: ${totalHired}\n` +
-    "Immigrant workers played a key role in stabilizing industries.\n" +
-    "The final round showed how shortages intensify without them.\n\n" +
-    "Thank you for playing!"
+    `Immigrant workers hired: ${totalImmigrantHires}\n\n` +
+    "Across these rounds, immigrant workers helped fill key gaps in multiple industries.\n" +
+    "In the final round, when immigrant applicants were unavailable, staffing became much harder.\n\n" +
+    "Thank you for playing."
   );
 }
 
@@ -448,9 +493,12 @@ checkBtn.addEventListener("click",()=>{
     return;
   }
 
-  hired.forEach(c=>permanentlyHired.add(c.id));
+  hired.forEach(c=>{
+    permanentlyHired.add(c.id);
+    if(c.immigrant) totalImmigrantHires++;
+  });
 
-  showIndustryFacts();
+  showIndustryFacts(currentRound);
 
   currentRound++;
   startGame();
@@ -460,10 +508,11 @@ checkBtn.addEventListener("click",()=>{
  * RESET
  ****************************************************/
 
-resetBtn.addEventListener("click", () => {
-  currentRound = 0;
+resetBtn.addEventListener("click",()=>{
+  currentRound=0;
   permanentlyHired.clear();
-  hiredIds = new Set();
+  hiredIds=new Set();
+  totalImmigrantHires=0;
   startGame();
 });
 
@@ -479,23 +528,43 @@ function startGame() {
 
   const roundId = roundOrder[currentRound];
 
-  // Pick job first so we know the type for the prompt
+  // Final round: explicitly restaurant (food service) and no immigrants
   if (roundId === "final") {
-    currentJob = randChoice(jobs);
+    currentJob = jobs.find(j => j.id === "restaurant");
   } else {
     currentJob = jobs.find(j => j.id === roundId);
   }
 
   const typeName = currentJob.title;
-  companyName = prompt(`What is your ${typeName}'s name?`) || "Your Company";
 
-  alert(`Round ${currentRound + 1}: ${typeName}`);
+  // Show round first
+  if (roundId === "final") {
+    alert(`Round ${currentRound + 1}: ${typeName} (Immigrant Applicants Unavailable)`);
+    alert(
+      "Policy Change:\n\n" +
+      "In this final round, immigrant applicants are temporarily unavailable.\n" +
+      "This reflects how policy or visa changes can suddenly remove a key part of the workforce.\n" +
+      "You will now see how much harder it is to staff this industry without them."
+    );
+  } else {
+    alert(`Round ${currentRound + 1}: ${typeName}`);
+  }
+
+  // Then ask for company name
+  companyName = prompt(`What is your ${typeName}'s name?`) || "Your Company";
 
   jobTitleEl.textContent = currentJob.title;
   budgetAmountEl.textContent = `$${currentJob.budget}/hr`;
   hireCountEl.textContent = REQUIRED_HIRES;
   hireCountInlineEl.textContent = REQUIRED_HIRES;
   jobDescriptionEl.textContent = currentJob.description.replace("COMPANY_NAME", companyName);
+
+  // Make final round harder: lower budget a bit
+  if (roundId === "final") {
+    const reducedBudget = Math.round(currentJob.budget * 0.8);
+    currentJob = { ...currentJob, budget: reducedBudget };
+    budgetAmountEl.textContent = `$${currentJob.budget}/hr`;
+  }
 
   generateCandidates();
   renderCandidates();
