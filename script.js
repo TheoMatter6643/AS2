@@ -1,7 +1,4 @@
-/****************************************************
- * CONFIG
- ****************************************************/
-
+// core config
 const REQUIRED_HIRES = 6;
 let companyName = "";
 let permanentlyHired = new Set();
@@ -18,13 +15,10 @@ const roundOrder = [
   "big-tech",
   "hospital",
   "space-company",
-  "final" // hardest: no immigrants, restaurant, higher wages
+  "final"
 ];
 
-/****************************************************
- * INDUSTRY-SPECIFIC FACT POOLS
- ****************************************************/
-
+// industry facts
 const industryFacts = {
   "restaurant": [
     "Immigrants make up a large share of restaurant workers in the U.S.",
@@ -70,10 +64,7 @@ const industryFacts = {
   ]
 };
 
-/****************************************************
- * JOB DEFINITIONS
- ****************************************************/
-
+// job definitions
 const jobs = [
   {
     id: "restaurant",
@@ -85,6 +76,8 @@ const jobs = [
     requiredSkills: ["cooking", "customer service", "cashier", "host", "logistics"],
     immigrantBonus: true,
     difficultyMultiplier: 1.0,
+    reliabilityMin: 4,
+    reliabilityMax: 10,
     description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
   {
@@ -97,6 +90,8 @@ const jobs = [
     requiredSkills: ["teaching", "childcare", "communication", "writing"],
     immigrantBonus: true,
     difficultyMultiplier: 1.2,
+    reliabilityMin: 5,
+    reliabilityMax: 10,
     description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
   {
@@ -109,6 +104,8 @@ const jobs = [
     requiredSkills: ["coding", "data", "debugging", "IT support"],
     immigrantBonus: true,
     difficultyMultiplier: 1.1,
+    reliabilityMin: 6,
+    reliabilityMax: 10,
     description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
   {
@@ -121,6 +118,8 @@ const jobs = [
     requiredSkills: ["caregiving", "analysis", "communication", "logistics"],
     immigrantBonus: true,
     difficultyMultiplier: 1.3,
+    reliabilityMin: 6,
+    reliabilityMax: 10,
     description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
   {
@@ -142,14 +141,13 @@ const jobs = [
     requiredSkills: ["analysis", "machinery", "precision", "electronics", "coding", "safety", "logistics"],
     immigrantBonus: true,
     difficultyMultiplier: 1.5,
-    description: `You are hiring for COMPANY_NAME, a rocket and spacecraft company. Hire ${REQUIRED_HIRES} workers for engineering, manufacturing, and launch operations.`
+    reliabilityMin: 7,
+    reliabilityMax: 10,
+    description: `You are hiring for COMPANY_NAME, a rocket and spacecraft company. Hire ${REQUIRED_HIRES} workers.`
   }
 ];
 
-/****************************************************
- * POOLS
- ****************************************************/
-
+// pools
 const degreePool = [
   "High School Student","High School Graduate","No Degree",
   "Computer Science","Software Engineering","Data Science","Information Technology",
@@ -186,10 +184,7 @@ let uniqueFirstNames = [
 
 const backupNames = [...uniqueFirstNames];
 
-/****************************************************
- * DOM
- ****************************************************/
-
+// dom
 const jobTitleEl = document.getElementById("job-title");
 const budgetAmountEl = document.getElementById("budget-amount");
 const hireCountEl = document.getElementById("hire-count");
@@ -203,13 +198,9 @@ const totalScoreEl = document.getElementById("total-score");
 const resetBtn = document.getElementById("reset-btn");
 const checkBtn = document.getElementById("check-btn");
 
-/****************************************************
- * UTILS
- ****************************************************/
-
+// utils
 function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function randChoice(a){return a[randInt(0,a.length-1)];}
-
 function generateName(){
   if(uniqueFirstNames.length===0) uniqueFirstNames=[...backupNames];
   const first=uniqueFirstNames.shift();
@@ -217,18 +208,12 @@ function generateName(){
   return `${first} ${last}`;
 }
 
-/****************************************************
- * STATE
- ****************************************************/
-
+// state
 let currentJob = null;
 let candidates = [];
 let hiredIds = new Set();
 
-/****************************************************
- * PAY + RELEVANCE
- ****************************************************/
-
+// pay + relevance
 function getBasePay(degree,skills){
   if(degree==="High School Student")return randInt(12,16);
   if(degree==="High School Graduate")return randInt(14,20);
@@ -257,16 +242,12 @@ function isRelevantForJob(c,j){
   return true;
 }
 
-/****************************************************
- * CANDIDATE GENERATION
- ****************************************************/
-
+// irrelevant candidate generator
 function generateIrrelevantCandidate(job){
   const immigrantAllowed = roundOrder[currentRound] !== "final";
   const immigrant = immigrantAllowed && Math.random() < 0.45;
 
   let wrongDegree = randChoice(degreePool);
-  // force some obviously wrong combos
   if(job.id === "restaurant") wrongDegree = randChoice(["Aerospace Engineering","Mechanical Engineering","Physics","Computer Science"]);
   else if(job.id === "space-company") wrongDegree = randChoice(["Culinary Arts","Fine Arts","Music","Psychology","Education","History"]);
   else if(job.id === "hospital") wrongDegree = randChoice(["Culinary Arts","Fine Arts","Music"]);
@@ -280,21 +261,15 @@ function generateIrrelevantCandidate(job){
     if(!skills.includes(s)) skills.push(s);
   }
 
-  let reliability = randInt(3,10);
+  let reliability = randInt(job.reliabilityMin, job.reliabilityMax);
   if(immigrant) reliability = Math.min(reliability+1,10);
 
   let pay = adjustForImmigrant(getBasePay(wrongDegree,skills),immigrant);
-
-  // absurd salary chance
-  if(Math.random() < 0.05){
-    pay = pay * randInt(2,4);
-  }
+  if(Math.random() < 0.05) pay = pay * randInt(2,4);
 
   const goodTrait = randChoice(goodTraits);
   let badTrait = randChoice(badTraits);
-  if(badTrait === goodTrait){
-    badTrait = randChoice(badTraits);
-  }
+  if(badTrait === goodTrait) badTrait = randChoice(badTraits);
 
   return {
     id:`c${globalCandidateId++}`,
@@ -309,6 +284,7 @@ function generateIrrelevantCandidate(job){
   };
 }
 
+// candidate generation
 function generateCandidates(){
   candidates=[];
   hiredIds=new Set();
@@ -316,7 +292,6 @@ function generateCandidates(){
 
   const immigrantsAllowed = roundOrder[currentRound] !== "final";
 
-  // first generate normal relevant-ish candidates
   while(candidates.length<40 && tries<400){
     tries++;
 
@@ -354,9 +329,9 @@ function generateCandidates(){
     for(let i=0;i<skillCount;i++){
       let s;
       if(currentJob.id==="elementary-school"){
-        s = randChoice(["teaching","childcare","communication","writing","communication","teaching"]);
+        s = randChoice(["teaching","childcare","communication","writing"]);
       } else if(currentJob.id==="hospital"){
-        s = randChoice(["caregiving","analysis","communication","logistics","caregiving"]);
+        s = randChoice(["caregiving","analysis","communication","logistics"]);
       } else if(currentJob.id==="restaurant"){
         s = randChoice(["cooking","customer service","cashier","host","logistics"]);
       } else if(currentJob.id==="big-tech"){
@@ -369,370 +344,11 @@ function generateCandidates(){
       if(!skills.includes(s))skills.push(s);
     }
 
-    let reliability = randInt(3,10);
+    let reliability = randInt(currentJob.reliabilityMin, currentJob.reliabilityMax);
     if(immigrant) reliability = Math.min(reliability+1,10);
 
     let pay = adjustForImmigrant(getBasePay(degree,skills),immigrant);
-
-    // absurd salary chance
-    if(Math.random() < 0.05){
-      pay = pay * randInt(2,4);
-    }
+    if(Math.random() < 0.05) pay = pay * randInt(2,4);
 
     const goodTrait = randChoice(goodTraits);
     let badTrait = randChoice(badTraits);
-    if(badTrait === goodTrait){
-      badTrait = randChoice(badTraits);
-    }
-
-    const c = {
-      id:`c${globalCandidateId++}`,
-      name:generateName(),
-      degree,
-      skills,
-      immigrant,
-      reliability,
-      pay,
-      goodTrait,
-      badTrait
-    };
-
-    if(permanentlyHired.has(c.id)) continue;
-    if(!isRelevantForJob(c,currentJob)) continue;
-
-    candidates.push(c);
-  }
-
-  // add 10 intentionally wrong-degree candidates
-  for(let i=0;i<10;i++){
-    const wrong = generateIrrelevantCandidate(currentJob);
-    candidates.push(wrong);
-  }
-}
-
-/****************************************************
- * RENDERING
- ****************************************************/
-
-function createCandidateCard(c,inHired){
-  const card=document.createElement("div");
-  card.className="candidate-card";
-  card.draggable=!inHired;
-  card.dataset.id=c.id;
-
-  card.innerHTML=`
-    <div class="candidate-header">
-      <span>${c.name}</span>
-      <span class="candidate-pay">$${c.pay}/hr</span>
-    </div>
-    <div class="candidate-meta">
-      Degree: (${c.degree}) • Reliability: ${c.reliability}/10
-    </div>
-    <div class="candidate-tags">
-      <span class="tag degree">${c.degree}</span>
-      ${c.immigrant?`<span class="tag immigrant">Immigrant</span>`:""}
-      <span class="tag good">${c.goodTrait}</span>
-      <span class="tag bad">${c.badTrait}</span>
-      ${c.skills.map(s=>`<span class="tag skill">${s}</span>`).join("")}
-    </div>
-  `;
-
-  if(!inHired){
-    card.addEventListener("dragstart",e=>{
-      card.classList.add("dragging");
-      e.dataTransfer.setData("text/plain",c.id);
-    });
-    card.addEventListener("dragend",()=>card.classList.remove("dragging"));
-  }
-
-  return card;
-}
-
-function renderCandidates(){
-  candidateListEl.innerHTML="";
-  candidates.forEach(c=>{
-    if(!hiredIds.has(c.id)) candidateListEl.appendChild(createCandidateCard(c,false));
-  });
-}
-
-function renderHired(){
-  hiredDropzoneEl.innerHTML="";
-  hiredDropzoneEl.classList.toggle("empty",hiredIds.size===0);
-  candidates.forEach(c=>{
-    if(hiredIds.has(c.id)) hiredDropzoneEl.appendChild(createCandidateCard(c,true));
-  });
-}
-
-/****************************************************
- * DRAG & DROP
- ****************************************************/
-
-candidateListEl.addEventListener("dragover",e=>e.preventDefault());
-candidateListEl.addEventListener("drop",e=>{
-  const id=e.dataTransfer.getData("text/plain");
-  if(!id)return;
-  hiredIds.delete(id);
-  renderCandidates();
-  renderHired();
-  updateScores();
-});
-
-hiredDropzoneEl.addEventListener("dragover",e=>e.preventDefault());
-hiredDropzoneEl.addEventListener("drop",e=>{
-  const id=e.dataTransfer.getData("text/plain");
-  if(!id)return;
-  hiredIds.add(id);
-  renderCandidates();
-  renderHired();
-  updateScores();
-});
-
-/****************************************************
- * SCORING
- ****************************************************/
-
-function computeFitScore(c){
-  let s=0;
-  const mult = currentJob.difficultyMultiplier || 1.0;
-
-  // Degree relevance
-  if(currentJob.preferredDegrees.includes(c.degree)) s+=5;
-  else if(currentJob.neutralDegrees.includes(c.degree)) s+=2;
-  else if(currentJob.badDegrees.includes(c.degree)) s-=5 * mult;
-
-  // Strong penalty if degree is not preferred or neutral
-  if(
-    !currentJob.preferredDegrees.includes(c.degree) &&
-    !currentJob.neutralDegrees.includes(c.degree)
-  ){
-    s-=4 * mult;
-  }
-
-  // Extra strong penalty for hospital with no/low degree
-  if(
-    currentJob.id==="hospital" &&
-    (c.degree==="No Degree" || c.degree==="High School Graduate" || c.degree==="High School Student")
-  ){
-    s-=8 * mult;
-  }
-
-  // Skills
-  const matches=c.skills.filter(x=>currentJob.requiredSkills.includes(x)).length;
-  if(matches>=2)s+=4;
-  else if(matches===1)s+=2;
-  else s-=4 * mult; // no relevant skills penalty
-
-  // Reliability: low reliability hurts, but can be offset
-  if(c.reliability>=8)s+=2;
-  else if(c.reliability<=5)s-=3 * mult;
-
-  // Traits: good adds a bit, bad subtracts a bit
-  if(goodTraits.includes(c.goodTrait)) s+=2;
-  if(badTraits.includes(c.badTrait)) s-=3 * mult;
-
-  // Safety / precision risk for demanding jobs
-  if(
-    (currentJob.id==="hospital" || currentJob.id==="space-company") &&
-    (c.badTrait==="disorganized" || c.badTrait==="easily distracted" || c.badTrait==="slow learner")
-  ){
-    s-=4 * mult;
-  }
-
-  // Immigrant structural bonus (shortage-filling)
-  if(currentJob.immigrantBonus && c.immigrant && roundOrder[currentRound] !== "final") s+=1;
-
-  // Absurd salary penalty
-  const maxReasonable = getBasePay(c.degree,c.skills) * 2.5;
-  if(c.pay > maxReasonable){
-    s-=5 * mult;
-    if(c.pay > maxReasonable * 1.5){
-      s-=5 * mult; // extra penalty for truly absurd
-    }
-  }
-
-  return s;
-}
-
-function updateScores(){
-  const hired=candidates.filter(c=>hiredIds.has(c.id));
-  const totalPay=hired.reduce((a,c)=>a+c.pay,0);
-  const remaining=currentJob.budget-totalPay;
-
-  budgetRemainingEl.textContent=`$${remaining}/hr`;
-
-  let fit=hired.reduce((a,c)=>a+computeFitScore(c),0);
-
-  fitScoreEl.textContent=fit;
-
-  let budgetScore = remaining>=0
-    ? Math.round((remaining/currentJob.budget)*100)
-    : Math.round((remaining/currentJob.budget)*50);
-
-  const total = fit + budgetScore;
-  totalScoreEl.textContent = total;
-}
-
-/****************************************************
- * FACT POPUP
- ****************************************************/
-
-function showIndustryFacts(roundIndex){
-  const id = roundOrder[roundIndex];
-  const facts = industryFacts[id];
-  const chosen = [];
-
-  while(chosen.length < 3 && chosen.length < facts.length){
-    const f = randChoice(facts);
-    if(!chosen.includes(f)) chosen.push(f);
-  }
-
-  alert("Workforce Facts:\n\n" + chosen.map(f => "• " + f).join("\n"));
-}
-
-/****************************************************
- * FINAL SUMMARY
- ****************************************************/
-
-function showFinalSummary(){
-  const totalHired = permanentlyHired.size;
-  const totalScore = roundScores.reduce((a,b)=>a+b,0);
-
-  const totalMs = Date.now() - gameStartTime;
-  const totalSeconds = Math.round(totalMs / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-
-  let summary = "Final Summary\n\n";
-  summary += `Total workers hired: ${totalHired}\n`;
-  summary += `Immigrant workers hired: ${totalImmigrantHires}\n`;
-  summary += `Total score across all rounds: ${totalScore}\n`;
-  summary += `Total time played: ${minutes}m ${seconds}s\n\n`;
-  summary += "Business Results:\n";
-
-  roundStats.forEach((r, idx) => {
-    summary += `\nRound ${idx+1}: ${r.jobTitle} (${r.companyName})\n`;
-    summary += `  Round score: ${r.roundScore}\n`;
-    summary += `  Immigrant hires this round: ${r.immigrantHires}\n`;
-  });
-
-  summary += "\nIn earlier rounds, immigrant workers helped fill key gaps.\n";
-  summary += "In the final round, when immigrant applicants were unavailable and wages rose, staffing became much harder.\n";
-
-  alert(summary);
-}
-
-/****************************************************
- * ROUND COMPLETION
- ****************************************************/
-
-checkBtn.addEventListener("click",()=>{
-  const hired=candidates.filter(c=>hiredIds.has(c.id));
-  if(hired.length!==REQUIRED_HIRES){
-    alert(`You must hire exactly ${REQUIRED_HIRES}.`);
-    return;
-  }
-
-  hired.forEach(c=>{
-    permanentlyHired.add(c.id);
-    if(c.immigrant) totalImmigrantHires++;
-  });
-
-  const roundTotal = parseInt(totalScoreEl.textContent,10) || 0;
-  roundScores.push(roundTotal);
-
-  const immigrantHiresThisRound = hired.filter(c=>c.immigrant).length;
-  roundStats.push({
-    jobTitle: currentJob.title,
-    companyName,
-    roundScore: roundTotal,
-    immigrantHires: immigrantHiresThisRound
-  });
-
-  showIndustryFacts(currentRound);
-
-  currentRound++;
-  startGame();
-});
-
-/****************************************************
- * RESET
- ****************************************************/
-
-resetBtn.addEventListener("click",()=>{
-  currentRound=0;
-  permanentlyHired.clear();
-  hiredIds=new Set();
-  totalImmigrantHires=0;
-  roundScores=[];
-  roundStats=[];
-  globalCandidateId=0;
-  gameStartTime = Date.now();
-  startGame();
-});
-
-/****************************************************
- * GAME LOOP
- ****************************************************/
-
-function startGame() {
-  if (!gameStartTime) {
-    gameStartTime = Date.now();
-  }
-
-  if (currentRound >= roundOrder.length) {
-    showFinalSummary();
-    return;
-  }
-
-  const roundId = roundOrder[currentRound];
-
-  // Final round: restaurant, no immigrants, higher wages
-  if (roundId === "final") {
-    currentJob = jobs.find(j => j.id === "restaurant");
-  } else {
-    currentJob = jobs.find(j => j.id === roundId);
-  }
-
-  const typeName = currentJob.title;
-
-  // Show round first
-  if (roundId === "final") {
-    alert(`Round ${currentRound + 1}: ${typeName} (Immigrant Applicants Unavailable, Wages Higher)`);
-    alert(
-      "Policy Change and Labor Shortage:\n\n" +
-      "In this final round, immigrant applicants are temporarily unavailable.\n" +
-      "This reflects how policy or visa changes can suddenly remove a key part of the workforce.\n" +
-      "Because of the shortage, wages are higher, but your budget has not fully kept up.\n" +
-      "You will now see how much harder it is to staff this industry without immigrant workers."
-    );
-  } else {
-    alert(`Round ${currentRound + 1}: ${typeName}`);
-  }
-
-  // Then ask for company name
-  companyName = prompt(`What is your ${typeName}'s name?`) || "Your Company";
-
-  jobTitleEl.textContent = currentJob.title;
-  hireCountEl.textContent = REQUIRED_HIRES;
-  hireCountInlineEl.textContent = REQUIRED_HIRES;
-
-  // Adjust budget for final round (slightly tighter, wages higher handled in pay)
-  if (roundId === "final") {
-    const reducedBudget = Math.round(currentJob.budget * 0.9);
-    currentJob = { ...currentJob, budget: reducedBudget };
-  }
-
-  budgetAmountEl.textContent = `$${currentJob.budget}/hr`;
-  jobDescriptionEl.textContent = currentJob.description.replace("COMPANY_NAME", companyName);
-
-  generateCandidates();
-  renderCandidates();
-  renderHired();
-  updateScores();
-}
-
-/****************************************************
- * START
- ****************************************************/
-
-startGame();
