@@ -352,3 +352,315 @@ function generateCandidates(){
 
     const goodTrait = randChoice(goodTraits);
     let badTrait = randChoice(badTraits);
+if (badTrait === goodTrait) badTrait = randChoice(badTraits);
+
+    const c = {
+      id: `c${globalCandidateId++}`,
+      name: generateName(),
+      degree,
+      skills,
+      immigrant,
+      reliability,
+      pay,
+      goodTrait,
+      badTrait
+    };
+
+    if (permanentlyHired.has(c.id)) continue;
+    if (!isRelevantForJob(c, currentJob)) continue;
+
+    candidates.push(c);
+  }
+
+  // add 10 irrelevant candidates
+  for (let i = 0; i < 10; i++) {
+    candidates.push(generateIrrelevantCandidate(currentJob));
+  }
+}
+function createCandidateCard(c, inHired) {
+  const card = document.createElement("div");
+  card.className = "candidate-card";
+  card.draggable = !inHired;
+  card.dataset.id = c.id;
+
+  card.innerHTML = `
+    <div class="candidate-header">
+      <span>${c.name}</span>
+      <span class="candidate-pay">$${c.pay}/hr</span>
+    </div>
+    <div class="candidate-meta">
+      Degree: (${c.degree}) • Reliability: ${c.reliability}/10
+    </div>
+    <div class="candidate-tags">
+      <span class="tag degree">${c.degree}</span>
+      ${c.immigrant ? `<span class="tag immigrant">Immigrant</span>` : ""}
+      <span class="tag good">${c.goodTrait}</span>
+      <span class="tag bad">${c.badTrait}</span>
+      ${c.skills.map(s => `<span class="tag skill">${s}</span>`).join("")}
+    </div>
+  `;
+
+  if (!inHired) {
+    card.addEventListener("dragstart", e => {
+      card.classList.add("dragging");
+      e.dataTransfer.setData("text/plain", c.id);
+    });
+    card.addEventListener("dragend", () => card.classList.remove("dragging"));
+  }
+
+  return card;
+}
+
+function renderCandidates() {
+  candidateListEl.innerHTML = "";
+  candidates.forEach(c => {
+    if (!hiredIds.has(c.id)) candidateListEl.appendChild(createCandidateCard(c, false));
+  });
+}
+
+function renderHired() {
+  hiredDropzoneEl.innerHTML = "";
+  hiredDropzoneEl.classList.toggle("empty", hiredIds.size === 0);
+  candidates.forEach(c => {
+    if (hiredIds.has(c.id)) hiredDropzoneEl.appendChild(createCandidateCard(c, true));
+  });
+}
+
+candidateListEl.addEventListener("dragover", e => e.preventDefault());
+candidateListEl.addEventListener("drop", e => {
+  const id = e.dataTransfer.getData("text/plain");
+  if (!id) return;
+  hiredIds.delete(id);
+  renderCandidates();
+  renderHired();
+  updateScores();
+});
+
+hiredDropzoneEl.addEventListener("dragover", e => e.preventDefault());
+hiredDropzoneEl.addEventListener("drop", e => {
+  const id = e.dataTransfer.getData("text/plain");
+  if (!id) return;
+  hiredIds.add(id);
+  renderCandidates();
+  renderHired();
+  updateScores();
+});
+
+function computeFitScore(c) {
+  let s = 0;
+  const mult = currentJob.difficultyMultiplier;
+
+  if (currentJob.preferredDegrees.includes(c.degree)) s += 5;
+  else if (currentJob.neutralDegrees.includes(c.degree)) s += 2;
+  else if (currentJob.badDegrees.includes(c.degree)) s -= 5 * mult;
+
+  if (
+    !currentJob.preferredDegrees.includes(c.degree) &&
+    !currentJob.neutralDegrees.includes(c.degree)
+  ) {
+    s -= 4 * mult;
+  }
+
+  if (
+    currentJob.id === "hospital" &&
+    (c.degree === "No Degree" || c.degree === "High School Graduate" || c.degree === "High School Student")
+  ) {
+    s -= 8 * mult;
+  }
+
+  const matches = c.skills.filter(x => currentJob.requiredSkills.includes(x)).length;
+  if (matches >= 2) s += 4;
+  else if (matches === 1) s += 2;
+  else s -= 4 * mult;
+
+  if (c.reliability >= 9) s += 3;
+  else if (c.reliability >= 7) s += 1;
+  else if (c.reliability <= 5) s -= 2 * mult;
+
+  if (goodTraits.includes(c.goodTrait)) s += 2;
+  if (badTraits.includes(c.badTrait)) s -= 3 * mult;
+
+  if (
+    (currentJob.id === "hospital" || currentJob.id === "space-company") &&
+    (c.badTrait === "disorganized" || c.badTrait === "easily distracted" || c.badTrait === "slow learner")
+  ) {
+    s -= 4 * mult;
+  }
+
+  if (currentJob.immigrantBonus && c.immigrant && roundOrder[currentRound] !== "final") s += 1;
+
+  const maxReasonable = getBasePay(c.degree, c.skills) * 2.5;
+  if (c.pay > maxReasonable) {
+    s -= 5 * mult;
+    if (c.pay > maxReasonable * 1.5) s -= 5 * mult;
+  }
+
+  return s;
+}
+
+function updateScores() {
+  const hired = candidates.filter(c => hiredIds.has(c.id));
+  const totalPay = hired.reduce((a, c) => a + c.pay, 0);
+  const remaining = currentJob.budget - totalPay;
+
+  budgetRemainingEl.textContent = `$${remaining}/hr`;
+
+  let fit = hired.reduce((a, c) => a + computeFitScore(c), 0);
+  fitScoreEl.textContent = fit;
+
+  let budgetScore = remaining >= 0
+    ? Math.round((remaining / currentJob.budget) * 100)
+    : Math.round((remaining / currentJob.budget) * 50);
+
+  const total = fit + budgetScore;
+  totalScoreEl.textContent = total;
+}
+
+// fact popup
+function showIndustryFacts(roundIndex) {
+  const id = roundOrder[roundIndex];
+  const facts = industryFacts[id];
+  const chosen = [];
+
+  while (chosen.length < 3 && chosen.length < facts.length) {
+    const f = randChoice(facts);
+    if (!chosen.includes(f)) chosen.push(f);
+  }
+
+  alert("Workforce Facts:\n\n" + chosen.map(f => "• " + f).join("\n"));
+}
+
+// final summary
+function showFinalSummary() {
+  const totalHired = permanentlyHired.size;
+  const totalScore = roundScores.reduce((a, b) => a + b, 0);
+
+  const totalMs = Date.now() - gameStartTime;
+  const totalSeconds = Math.round(totalMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  let summary = "Final Summary\n\n";
+  summary += `Total workers hired: ${totalHired}\n`;
+  summary += `Immigrant workers hired: ${totalImmigrantHires}\n`;
+  summary += `Total score across all rounds: ${totalScore}\n`;
+  summary += `Total time played: ${minutes}m ${seconds}s\n\n`;
+
+  summary += "Business Results:\n";
+
+  // now includes all rounds including space company
+  roundStats.forEach((r, idx) => {
+    summary += `\nRound ${idx + 1}: ${r.jobTitle} (${r.companyName})\n`;
+    summary += `  Round score: ${r.roundScore}\n`;
+    summary += `  Immigrant hires this round: ${r.immigrantHires}\n`;
+  });
+
+  summary += "\nScore Rating:\n";
+  if (totalScore >= 350) summary += "Excellent performance — your companies thrived.\n";
+  else if (totalScore >= 250) summary += "Good performance — solid staffing choices.\n";
+  else if (totalScore >= 150) summary += "Average performance — some hires held you back.\n";
+  else summary += "Poor performance — your staffing struggled.\n";
+
+  summary += "\nIn earlier rounds, immigrant workers helped fill key gaps.\n";
+  summary += "In the final round, when immigrant applicants were unavailable and wages rose, staffing became much harder.\n";
+
+  alert(summary);
+}
+
+// round completion
+checkBtn.addEventListener("click", () => {
+  const hired = candidates.filter(c => hiredIds.has(c.id));
+  if (hired.length !== REQUIRED_HIRES) {
+    alert(`You must hire exactly ${REQUIRED_HIRES}.`);
+    return;
+  }
+
+  hired.forEach(c => {
+    permanentlyHired.add(c.id);
+    if (c.immigrant) totalImmigrantHires++;
+  });
+
+  const roundTotal = parseFloat(totalScoreEl.textContent) || 0;
+  roundScores.push(roundTotal);
+
+  const immigrantHiresThisRound = hired.filter(c => c.immigrant).length;
+  roundStats.push({
+    jobTitle: currentJob.title,
+    companyName,
+    roundScore: roundTotal,
+    immigrantHires: immigrantHiresThisRound
+  });
+
+  showIndustryFacts(currentRound);
+
+  currentRound++;
+  startGame();
+});
+
+// reset
+resetBtn.addEventListener("click", () => {
+  currentRound = 0;
+  permanentlyHired.clear();
+  hiredIds = new Set();
+  totalImmigrantHires = 0;
+  roundScores = [];
+  roundStats = [];
+  globalCandidateId = 0;
+  gameStartTime = Date.now();
+  startGame();
+});
+
+// start game
+function startGame() {
+  if (!gameStartTime) gameStartTime = Date.now();
+
+  if (currentRound >= roundOrder.length) {
+    showFinalSummary();
+    return;
+  }
+
+  const roundId = roundOrder[currentRound];
+
+  if (roundId === "final") {
+    currentJob = jobs.find(j => j.id === "restaurant");
+  } else {
+    currentJob = jobs.find(j => j.id === roundId);
+  }
+
+  const typeName = currentJob.title;
+
+  if (roundId === "final") {
+    alert(`Round ${currentRound + 1}: ${typeName} (Immigrant Applicants Unavailable, Wages Higher)`);
+    alert(
+      "Policy Change and Labor Shortage:\n\n" +
+      "In this final round, immigrant applicants are temporarily unavailable.\n" +
+      "This reflects how policy or visa changes can suddenly remove a key part of the workforce.\n" +
+      "Because of the shortage, wages are higher, but your budget has not fully kept up.\n" +
+      "You will now see how much harder it is to staff this industry without immigrant workers."
+    );
+  } else {
+    alert(`Round ${currentRound + 1}: ${typeName}`);
+  }
+
+  companyName = prompt(`What is your ${typeName}'s name?`) || "Your Company";
+
+  jobTitleEl.textContent = currentJob.title;
+  hireCountEl.textContent = REQUIRED_HIRES;
+  hireCountInlineEl.textContent = REQUIRED_HIRES;
+
+  if (roundId === "final") {
+    const reducedBudget = Math.round(currentJob.budget * 0.9);
+    currentJob = { ...currentJob, budget: reducedBudget };
+  }
+
+  budgetAmountEl.textContent = `$${currentJob.budget}/hr`;
+  jobDescriptionEl.textContent = currentJob.description.replace("COMPANY_NAME", companyName);
+
+  generateCandidates();
+  renderCandidates();
+  renderHired();
+  updateScores();
+}
+
+// start
+startGame();
