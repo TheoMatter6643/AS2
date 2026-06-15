@@ -76,7 +76,7 @@ const jobs = [
     requiredSkills: ["cooking", "customer service", "cashier", "host", "logistics"],
     immigrantBonus: true,
     difficultyMultiplier: 1.0,
-    reliabilityMin: 4,
+    reliabilityMin: 3,
     reliabilityMax: 10,
     description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
@@ -90,7 +90,7 @@ const jobs = [
     requiredSkills: ["teaching", "childcare", "communication", "writing"],
     immigrantBonus: true,
     difficultyMultiplier: 1.2,
-    reliabilityMin: 5,
+    reliabilityMin: 4,
     reliabilityMax: 10,
     description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
@@ -104,7 +104,7 @@ const jobs = [
     requiredSkills: ["coding", "data", "debugging", "IT support"],
     immigrantBonus: true,
     difficultyMultiplier: 1.1,
-    reliabilityMin: 6,
+    reliabilityMin: 5,
     reliabilityMax: 10,
     description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
@@ -118,7 +118,7 @@ const jobs = [
     requiredSkills: ["caregiving", "analysis", "communication", "logistics"],
     immigrantBonus: true,
     difficultyMultiplier: 1.3,
-    reliabilityMin: 6,
+    reliabilityMin: 5,
     reliabilityMax: 10,
     description: `You are hiring for COMPANY_NAME. Hire ${REQUIRED_HIRES} workers.`
   },
@@ -141,7 +141,7 @@ const jobs = [
     requiredSkills: ["analysis", "machinery", "precision", "electronics", "coding", "safety", "logistics"],
     immigrantBonus: true,
     difficultyMultiplier: 1.5,
-    reliabilityMin: 7,
+    reliabilityMin: 6,
     reliabilityMax: 10,
     description: `You are hiring for COMPANY_NAME, a rocket and spacecraft company. Hire ${REQUIRED_HIRES} workers.`
   }
