@@ -69,7 +69,7 @@ const jobs = [
   {
     id: "restaurant",
     title: "Restaurant",
-    budget: 140,
+    budget: 100,
     preferredDegrees: ["Culinary Arts", "Hospitality", "Business Administration"],
     neutralDegrees: ["Music", "Fine Arts", "Education", "High School Graduate", "No Degree"],
     badDegrees: ["Aerospace Engineering", "Data Science", "Physics"],
@@ -83,7 +83,7 @@ const jobs = [
   {
     id: "elementary-school",
     title: "Elementary School",
-    budget: 180,
+    budget: 130,
     preferredDegrees: ["Education", "Psychology", "English", "History", "Music"],
     neutralDegrees: ["Fine Arts", "Mathematics", "High School Graduate"],
     badDegrees: ["Aerospace Engineering", "Mechanical Engineering", "Computer Science", "Software Engineering"],
@@ -97,7 +97,7 @@ const jobs = [
   {
     id: "big-tech",
     title: "Tech Company",
-    budget: 300,
+    budget: 220,
     preferredDegrees: ["Computer Science", "Software Engineering", "Data Science", "Information Technology", "Mechanical Engineering"],
     neutralDegrees: ["Mathematics", "Business Administration", "Physics", "High School Graduate"],
     badDegrees: ["Music", "Fine Arts", "Culinary Arts", "History", "Education"],
@@ -111,7 +111,7 @@ const jobs = [
   {
     id: "hospital",
     title: "Hospital",
-    budget: 320,
+    budget: 240,
     preferredDegrees: ["Nursing", "Biology", "Medicine", "Doctor", "Psychology"],
     neutralDegrees: ["Business Administration", "Mathematics"],
     badDegrees: ["Music", "Fine Arts", "Culinary Arts", "No Degree", "High School Graduate", "High School Student"],
@@ -125,7 +125,7 @@ const jobs = [
   {
     id: "space-company",
     title: "Space Company",
-    budget: 350,
+    budget: 260,
     preferredDegrees: [
       "Aerospace Engineering",
       "Mechanical Engineering",
@@ -248,11 +248,11 @@ function generateIrrelevantCandidate(job){
   const immigrant = immigrantAllowed && Math.random() < 0.45;
 
   let wrongDegree = randChoice(degreePool);
-  if(job.id === "restaurant") wrongDegree = randChoice(["Aerospace Engineering","Mechanical Engineering","Physics","Computer Science"]);
-  else if(job.id === "space-company") wrongDegree = randChoice(["Culinary Arts","Fine Arts","Music","Psychology","Education","History"]);
-  else if(job.id === "hospital") wrongDegree = randChoice(["Culinary Arts","Fine Arts","Music"]);
-  else if(job.id === "elementary-school") wrongDegree = randChoice(["Aerospace Engineering","Mechanical Engineering","Computer Science"]);
-  else if(job.id === "big-tech") wrongDegree = randChoice(["Culinary Arts","Fine Arts","Music","Education"]);
+  if(job.id==="restaurant") wrongDegree = randChoice(["Aerospace Engineering","Mechanical Engineering","Physics","Computer Science"]);
+  else if(job.id==="space-company") wrongDegree = randChoice(["Culinary Arts","Fine Arts","Music","Psychology","Education","History"]);
+  else if(job.id==="hospital") wrongDegree = randChoice(["Culinary Arts","Fine Arts","Music"]);
+  else if(job.id==="elementary-school") wrongDegree = randChoice(["Aerospace Engineering","Mechanical Engineering","Computer Science"]);
+  else if(job.id==="big-tech") wrongDegree = randChoice(["Culinary Arts","Fine Arts","Music","Education"]);
 
   const skills = [];
   const skillCount = randInt(1,3);
@@ -265,11 +265,14 @@ function generateIrrelevantCandidate(job){
   if(immigrant) reliability = Math.min(reliability+1,10);
 
   let pay = adjustForImmigrant(getBasePay(wrongDegree,skills),immigrant);
-  if(Math.random() < 0.05) pay = pay * randInt(2,4);
+  if(Math.random() < 0.12) pay = pay * 2;
 
   const goodTrait = randChoice(goodTraits);
   let badTrait = randChoice(badTraits);
   if(badTrait === goodTrait) badTrait = randChoice(badTraits);
+
+  let extraBadTrait = null;
+  if(Math.random() < 0.25) extraBadTrait = randChoice(badTraits);
 
   return {
     id:`c${globalCandidateId++}`,
@@ -280,7 +283,8 @@ function generateIrrelevantCandidate(job){
     reliability,
     pay,
     goodTrait,
-    badTrait
+    badTrait,
+    extraBadTrait
   };
 }
 
@@ -291,30 +295,31 @@ function generateCandidates(){
   let tries=0;
 
   const immigrantsAllowed = roundOrder[currentRound] !== "final";
+  const targetCount = roundOrder[currentRound] === "final" ? 15 : 40;
 
-  while(candidates.length<40 && tries<400){
+  while(candidates.length<targetCount && tries<400){
     tries++;
 
     const immigrant = immigrantsAllowed && Math.random() < 0.45;
 
     let degree;
-    if(currentJob.id === "elementary-school"){
+    if(currentJob.id==="elementary-school"){
       degree = immigrant
         ? randChoice(["Education","Psychology","English","History","Music","High School Graduate"])
         : randChoice(["Education","Psychology","English","History","Music","Fine Arts","High School Graduate"]);
-    } else if(currentJob.id === "hospital"){
+    } else if(currentJob.id==="hospital"){
       degree = immigrant
         ? randChoice(["Nursing","Biology","Medicine","Doctor","Psychology"])
         : randChoice(["Nursing","Biology","Medicine","Doctor","Psychology","Business Administration"]);
-    } else if(currentJob.id === "restaurant"){
+    } else if(currentJob.id==="restaurant"){
       degree = immigrant
         ? randChoice(["Culinary Arts","Hospitality","Business Administration","High School Graduate","No Degree"])
         : randChoice(["Culinary Arts","Hospitality","Business Administration","High School Graduate","No Degree","Fine Arts"]);
-    } else if(currentJob.id === "big-tech"){
+    } else if(currentJob.id==="big-tech"){
       degree = immigrant
         ? randChoice(["Computer Science","Software Engineering","Data Science","Information Technology","Mathematics"])
         : randChoice(["Computer Science","Software Engineering","Data Science","Information Technology","Mathematics","Mechanical Engineering"]);
-    } else if(currentJob.id === "space-company"){
+    } else if(currentJob.id==="space-company"){
       degree = immigrant
         ? randChoice(["Aerospace Engineering","Mechanical Engineering","Electrical Engineering","Computer Science","Software Engineering","Physics","Mathematics","Materials Science"])
         : randChoice(["Aerospace Engineering","Mechanical Engineering","Electrical Engineering","Computer Science","Software Engineering","Physics","Mathematics","Materials Science","Industrial Engineering","Business Administration","Logistics","High School Graduate"]);
@@ -348,35 +353,40 @@ function generateCandidates(){
     if(immigrant) reliability = Math.min(reliability+1,10);
 
     let pay = adjustForImmigrant(getBasePay(degree,skills),immigrant);
-    if(Math.random() < 0.05) pay = pay * randInt(2,4);
+    if(Math.random() < 0.12) pay = pay * 2;
 
     const goodTrait = randChoice(goodTraits);
     let badTrait = randChoice(badTraits);
-if (badTrait === goodTrait) badTrait = randChoice(badTraits);
+    if(badTrait === goodTrait) badTrait = randChoice(badTraits);
+
+    let extraBadTrait = null;
+    if(Math.random() < 0.25) extraBadTrait = randChoice(badTraits);
 
     const c = {
-      id: `c${globalCandidateId++}`,
-      name: generateName(),
+      id:`c${globalCandidateId++}`,
+      name:generateName(),
       degree,
       skills,
       immigrant,
       reliability,
       pay,
       goodTrait,
-      badTrait
+      badTrait,
+      extraBadTrait
     };
 
-    if (permanentlyHired.has(c.id)) continue;
-    if (!isRelevantForJob(c, currentJob)) continue;
+    if(permanentlyHired.has(c.id)) continue;
+    if(!isRelevantForJob(c,currentJob)) continue;
 
     candidates.push(c);
   }
 
-  // add 10 irrelevant candidates
-  for (let i = 0; i < 10; i++) {
+  for(let i=0;i<10;i++){
     candidates.push(generateIrrelevantCandidate(currentJob));
   }
 }
+
+// rendering
 function createCandidateCard(c, inHired) {
   const card = document.createElement("div");
   card.className = "candidate-card";
@@ -396,6 +406,7 @@ function createCandidateCard(c, inHired) {
       ${c.immigrant ? `<span class="tag immigrant">Immigrant</span>` : ""}
       <span class="tag good">${c.goodTrait}</span>
       <span class="tag bad">${c.badTrait}</span>
+      ${c.extraBadTrait ? `<span class="tag bad">${c.extraBadTrait}</span>` : ""}
       ${c.skills.map(s => `<span class="tag skill">${s}</span>`).join("")}
     </div>
   `;
@@ -426,6 +437,7 @@ function renderHired() {
   });
 }
 
+// drag + drop
 candidateListEl.addEventListener("dragover", e => e.preventDefault());
 candidateListEl.addEventListener("drop", e => {
   const id = e.dataTransfer.getData("text/plain");
@@ -446,6 +458,7 @@ hiredDropzoneEl.addEventListener("drop", e => {
   updateScores();
 });
 
+// scoring
 function computeFitScore(c) {
   let s = 0;
   const mult = currentJob.difficultyMultiplier;
@@ -479,6 +492,7 @@ function computeFitScore(c) {
 
   if (goodTraits.includes(c.goodTrait)) s += 2;
   if (badTraits.includes(c.badTrait)) s -= 3 * mult;
+  if (c.extraBadTrait) s -= 3 * mult;
 
   if (
     (currentJob.id === "hospital" || currentJob.id === "space-company") &&
@@ -530,41 +544,39 @@ function showIndustryFacts(roundIndex) {
   alert("Workforce Facts:\n\n" + chosen.map(f => "• " + f).join("\n"));
 }
 
-// final summary
+// final summary (two alerts)
 function showFinalSummary() {
-  const totalHired = permanentlyHired.size;
   const totalScore = roundScores.reduce((a, b) => a + b, 0);
-
   const totalMs = Date.now() - gameStartTime;
   const totalSeconds = Math.round(totalMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
 
-  let summary = "Final Summary\n\n";
-  summary += `Total workers hired: ${totalHired}\n`;
-  summary += `Immigrant workers hired: ${totalImmigrantHires}\n`;
-  summary += `Total score across all rounds: ${totalScore}\n`;
-  summary += `Total time played: ${minutes}m ${seconds}s\n\n`;
+  let rating = "";
+  if (totalScore >= 350) rating = "Excellent";
+  else if (totalScore >= 250) rating = "Good";
+  else if (totalScore >= 150) rating = "Average";
+  else rating = "Poor";
 
-  summary += "Business Results:\n";
+  let alert1 =
+    `FINAL SCORE: ${totalScore}\n` +
+    `RATING: ${rating}\n\n` +
+    `Time Played: ${minutes}m ${seconds}s\n` +
+    `Workers Hired: ${permanentlyHired.size}\n` +
+    `Immigrant Hires: ${totalImmigrantHires}`;
 
-  // now includes all rounds including space company
+  alert(alert1);
+
+  let alert2 = "BUSINESS RESULTS\n";
+
   roundStats.forEach((r, idx) => {
-    summary += `\nRound ${idx + 1}: ${r.jobTitle} (${r.companyName})\n`;
-    summary += `  Round score: ${r.roundScore}\n`;
-    summary += `  Immigrant hires this round: ${r.immigrantHires}\n`;
+    alert2 +=
+      `\nRound ${idx + 1}: ${r.jobTitle} (${r.companyName})\n` +
+      `Score: ${r.roundScore}\n` +
+      `Immigrant Hires: ${r.immigrantHires}\n`;
   });
 
-  summary += "\nScore Rating:\n";
-  if (totalScore >= 350) summary += "Excellent performance — your companies thrived.\n";
-  else if (totalScore >= 250) summary += "Good performance — solid staffing choices.\n";
-  else if (totalScore >= 150) summary += "Average performance — some hires held you back.\n";
-  else summary += "Poor performance — your staffing struggled.\n";
-
-  summary += "\nIn earlier rounds, immigrant workers helped fill key gaps.\n";
-  summary += "In the final round, when immigrant applicants were unavailable and wages rose, staffing became much harder.\n";
-
-  alert(summary);
+  alert(alert2);
 }
 
 // round completion
@@ -622,7 +634,10 @@ function startGame() {
   const roundId = roundOrder[currentRound];
 
   if (roundId === "final") {
-    currentJob = jobs.find(j => j.id === "restaurant");
+    currentJob = {
+      ...jobs.find(j => j.id === "restaurant"),
+      budget: 100
+    };
   } else {
     currentJob = jobs.find(j => j.id === roundId);
   }
@@ -630,13 +645,11 @@ function startGame() {
   const typeName = currentJob.title;
 
   if (roundId === "final") {
-    alert(`Round ${currentRound + 1}: ${typeName} (Immigrant Applicants Unavailable, Wages Higher)`);
+    alert(`Round ${currentRound + 1}: ${typeName} (Final Round)`);
     alert(
-      "Policy Change and Labor Shortage:\n\n" +
-      "In this final round, immigrant applicants are temporarily unavailable.\n" +
-      "This reflects how policy or visa changes can suddenly remove a key part of the workforce.\n" +
-      "Because of the shortage, wages are higher, but your budget has not fully kept up.\n" +
-      "You will now see how much harder it is to staff this industry without immigrant workers."
+      "In this final round, immigrant applicants are unavailable.\n" +
+      "Wages are higher, the candidate pool is smaller, and the budget is tight.\n" +
+      "This simulates a real labor shortage."
     );
   } else {
     alert(`Round ${currentRound + 1}: ${typeName}`);
@@ -647,11 +660,6 @@ function startGame() {
   jobTitleEl.textContent = currentJob.title;
   hireCountEl.textContent = REQUIRED_HIRES;
   hireCountInlineEl.textContent = REQUIRED_HIRES;
-
-  if (roundId === "final") {
-    const reducedBudget = Math.round(currentJob.budget * 0.9);
-    currentJob = { ...currentJob, budget: reducedBudget };
-  }
 
   budgetAmountEl.textContent = `$${currentJob.budget}/hr`;
   jobDescriptionEl.textContent = currentJob.description.replace("COMPANY_NAME", companyName);
