@@ -1,4 +1,16 @@
-alert("Welcome! Your goal is to place each piece into the correct spot on the board. Each piece belongs to a specific group, and your job is to match the pieces to the correct cells. Drag a piece and drop it where you think it fits. When all pieces are in the right places, you win!");
+alert(
+  "HOW TO PLAY\n\n" +
+  "You are the hiring manager for several different industries.\n" +
+  "Each round, you must hire exactly 6 workers while staying under budget.\n\n" +
+  "• Drag candidates into the Hired box.\n" +
+  "• Each candidate has skills, traits, reliability, and a salary.\n" +
+  "• Some degrees and skills fit the job better than others.\n" +
+  "• Bad traits and high salaries can hurt your score.\n" +
+  "• Immigrant workers often help fill key roles.\n\n" +
+  "In the final round, immigrant applicants disappear and wages rise.\n" +
+  "This simulates a real labor shortage — the game becomes much harder.\n\n" +
+  "Your goal is to build the best workforce you can across all rounds."
+);
 // core config
 const REQUIRED_HIRES = 6;
 let companyName = "";
