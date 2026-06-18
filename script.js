@@ -1,3 +1,4 @@
+alert("Welcome! Your goal is to place each piece into the correct spot on the board. Each piece belongs to a specific group, and your job is to match the pieces to the correct cells. Drag a piece and drop it where you think it fits. When all pieces are in the right places, you win!");
 // core config
 const REQUIRED_HIRES = 6;
 let companyName = "";
